@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Vintage Tee</title>
+  <desc id="desc">Abstract placeholder for Vintage Tee.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f6ede1"/>
+      <stop offset="100%" stop-color="#d7c8b5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#g)"/>
+  <path d="M330 350h540v500H330z" fill="#7f6f5c" opacity="0.2"/>
+  <text x="50%" y="52%" text-anchor="middle" fill="#4f4032" font-size="72" font-family="Georgia, serif">Vintage Tee</text>
+</svg>

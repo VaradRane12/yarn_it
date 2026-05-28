@@ -16,14 +16,14 @@ export function WelcomeToast() {
         },
         description: (
           <>
-            This is a high-performance, SSR storefront powered by Shopify,
-            Next.js, and Vercel.{" "}
+            This storefront runs on a pluggable data layer with local-first
+            catalog data and optional database backends.{" "}
             <a
-              href="https://vercel.com/templates/next.js/nextjs-commerce"
+              href="https://github.com/vercel/commerce"
               className="text-blue-600 hover:underline"
               target="_blank"
             >
-              Deploy your own
+              Explore the template origin
             </a>
             .
           </>

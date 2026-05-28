@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Trail Bottle</title>
+  <desc id="desc">Abstract placeholder for Trail Bottle.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ddeff1"/>
+      <stop offset="100%" stop-color="#98c4ca"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#g)"/>
+  <rect x="500" y="260" width="200" height="680" rx="90" fill="#2f6a72" opacity="0.25"/>
+  <text x="50%" y="52%" text-anchor="middle" fill="#1f4d53" font-size="68" font-family="Georgia, serif">Trail Bottle</text>
+</svg>
