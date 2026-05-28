@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
+  <title id="title">City Hoodie</title>
+  <desc id="desc">Abstract placeholder for City Hoodie.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#dce6ef"/>
+      <stop offset="100%" stop-color="#9eb4c7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#g)"/>
+  <circle cx="600" cy="600" r="260" fill="#32495d" opacity="0.25"/>
+  <text x="50%" y="52%" text-anchor="middle" fill="#22303d" font-size="72" font-family="Georgia, serif">City Hoodie</text>
+</svg>

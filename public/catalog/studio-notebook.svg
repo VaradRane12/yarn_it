@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Studio Notebook</title>
+  <desc id="desc">Abstract placeholder for Studio Notebook.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#efe6f0"/>
+      <stop offset="100%" stop-color="#c5abc8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#g)"/>
+  <rect x="380" y="220" width="460" height="760" rx="20" fill="#6b4f70" opacity="0.22"/>
+  <text x="50%" y="52%" text-anchor="middle" fill="#4a3450" font-size="62" font-family="Georgia, serif">Studio Notebook</text>
+</svg>

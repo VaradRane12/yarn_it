@@ -1,17 +1,18 @@
 "use client";
 
+import { DEFAULT_CURRENCY_CODE } from "lib/constants";
 import type {
-  Cart,
-  CartItem,
-  Product,
-  ProductVariant,
-} from "lib/shopify/types";
+    Cart,
+    CartItem,
+    Product,
+    ProductVariant,
+} from "lib/store/types";
 import React, {
-  createContext,
-  use,
-  useContext,
-  useMemo,
-  useOptimistic,
+    createContext,
+    use,
+    useContext,
+    useMemo,
+    useOptimistic,
 } from "react";
 
 type UpdateType = "plus" | "minus" | "delete";
@@ -34,6 +35,21 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 function calculateItemCost(quantity: number, price: string): string {
   return (Number(price) * quantity).toString();
+}
+
+function resolveUnitPrice(variant: ProductVariant, product: Product) {
+  const variantAmount = Number(variant.price?.amount);
+  const fallbackAmount = Number(product.priceRange.maxVariantPrice.amount);
+  const amount =
+    Number.isFinite(variantAmount) && variantAmount > 0
+      ? variantAmount
+      : Number.isFinite(fallbackAmount)
+        ? fallbackAmount
+        : 0;
+
+  const currencyCode = DEFAULT_CURRENCY_CODE;
+
+  return { amount, currencyCode };
 }
 
 function updateCartItem(
@@ -59,6 +75,7 @@ function updateCartItem(
       ...item.cost,
       totalAmount: {
         ...item.cost.totalAmount,
+        currencyCode: DEFAULT_CURRENCY_CODE,
         amount: newTotalAmount,
       },
     },
@@ -71,7 +88,8 @@ function createOrUpdateCartItem(
   product: Product,
 ): CartItem {
   const quantity = existingItem ? existingItem.quantity + 1 : 1;
-  const totalAmount = calculateItemCost(quantity, variant.price.amount);
+  const unitPrice = resolveUnitPrice(variant, product);
+  const totalAmount = calculateItemCost(quantity, unitPrice.amount.toString());
 
   return {
     id: existingItem?.id,
@@ -79,7 +97,7 @@ function createOrUpdateCartItem(
     cost: {
       totalAmount: {
         amount: totalAmount,
-        currencyCode: variant.price.currencyCode,
+        currencyCode: unitPrice.currencyCode,
       },
     },
     merchandise: {
@@ -104,7 +122,7 @@ function updateCartTotals(
     (sum, item) => sum + Number(item.cost.totalAmount.amount),
     0,
   );
-  const currencyCode = lines[0]?.cost.totalAmount.currencyCode ?? "USD";
+  const currencyCode = DEFAULT_CURRENCY_CODE;
 
   return {
     totalQuantity,
@@ -123,9 +141,9 @@ function createEmptyCart(): Cart {
     totalQuantity: 0,
     lines: [],
     cost: {
-      subtotalAmount: { amount: "0", currencyCode: "USD" },
-      totalAmount: { amount: "0", currencyCode: "USD" },
-      totalTaxAmount: { amount: "0", currencyCode: "USD" },
+      subtotalAmount: { amount: "0", currencyCode: DEFAULT_CURRENCY_CODE },
+      totalAmount: { amount: "0", currencyCode: DEFAULT_CURRENCY_CODE },
+      totalTaxAmount: { amount: "0", currencyCode: DEFAULT_CURRENCY_CODE },
     },
   };
 }
