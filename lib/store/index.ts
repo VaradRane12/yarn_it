@@ -72,7 +72,7 @@ function normalizeProduct(product: Product): Product | undefined {
 function normalizeCollections(collections: Collection[]): Collection[] {
   return collections.map((collection) => ({
     ...collection,
-    path: collection.handle ? `/${collection.handle}` : "/products",
+    path: collection.handle ? `/${collection.handle}` : "/search",
   }));
 }
 
@@ -438,7 +438,7 @@ export async function getCollections(): Promise<Collection[]> {
         title: "All",
         description: "All products",
       },
-      path: "/products",
+      path: "/search",
       updatedAt: new Date().toISOString(),
     },
     ...visible,
@@ -503,10 +503,12 @@ export async function getProductRecommendations(productId: string): Promise<Prod
 
 export async function getProducts({
   query,
+  collection,
   reverse,
   sortKey,
 }: {
   query?: string;
+  collection?: string;
   reverse?: boolean;
   sortKey?: string;
 }): Promise<Product[]> {
@@ -515,7 +517,11 @@ export async function getProducts({
   cacheLife("days");
 
   const catalog = await getCatalog();
-  const visible = catalog.products
+  const filteredByCollection = collection
+    ? catalog.products.filter((product) => product.collectionHandles.includes(collection))
+    : catalog.products;
+
+  const visible = filteredByCollection
     .map((product) => normalizeProduct(product))
     .filter(Boolean) as Product[];
 

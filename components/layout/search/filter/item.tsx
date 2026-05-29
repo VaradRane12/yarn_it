@@ -10,11 +10,18 @@ import type { ListItem, PathFilterItem } from ".";
 function PathFilterItem({ item }: { item: PathFilterItem }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const active = pathname === item.path;
+  const active = item.collection
+    ? searchParams.get("collection") === item.collection
+    : pathname === item.path && !searchParams.get("collection");
   const newParams = new URLSearchParams(searchParams.toString());
   const DynamicTag = active ? "p" : Link;
 
   newParams.delete("q");
+  if (item.collection) {
+    newParams.set("collection", item.collection);
+  } else {
+    newParams.delete("collection");
+  }
 
   return (
     <li className="mt-2 flex text-black dark:text-white" key={item.title}>

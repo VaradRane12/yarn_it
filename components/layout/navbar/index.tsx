@@ -24,7 +24,7 @@ export async function Navbar() {
     { title: "My Orders", path: "/orders" },
   ];
 
-  const menu = [{ title: "All Products", path: "/products" }, ...categoryMenu, ...utilityMenu];
+  const menu = [{ title: "All Products", path: "/search" }, ...categoryMenu, ...utilityMenu];
 
   return (
     <nav className="relative flex items-center justify-between p-4 lg:px-6">
@@ -49,7 +49,7 @@ export async function Navbar() {
             <ul className="hidden gap-6 text-sm md:flex md:items-center">
               <li>
                 <Link
-                  href="/products"
+                  href="/search"
                   prefetch={true}
                   className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
                 >
