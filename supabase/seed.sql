@@ -53,3 +53,16 @@ INSERT INTO menus(handle, title, path, position) VALUES
 ('next-js-frontend-footer-menu', 'Returns', '/returns', 2),
 ('next-js-frontend-footer-menu', 'About', '/about', 3)
 ON CONFLICT DO NOTHING;
+
+-- Accounts (optional basic account example)
+INSERT INTO accounts(id, email, name)
+VALUES
+('acc_demo_customer', 'customer@example.com', 'Demo Customer')
+ON CONFLICT (email) DO NOTHING;
+
+-- Orders (guest and account-linked examples)
+INSERT INTO orders(id, account_id, customer_email, guest_email, status, payment_method, payment_status, currency_code, total_amount, cart_snapshot, notes)
+VALUES
+('ord_demo_guest', NULL, NULL, 'guest@example.com', 'pending', 'upi', 'pending', 'INR', 499.00, '{"totalQuantity":1,"lines":[],"totals":{"subtotalAmount":{"amount":"499.00","currencyCode":"INR"},"totalAmount":{"amount":"499.00","currencyCode":"INR"},"totalTaxAmount":{"amount":"0","currencyCode":"INR"}}}'::jsonb, 'Guest demo order'),
+('ord_demo_account', 'acc_demo_customer', 'customer@example.com', NULL, 'pending', 'upi', 'pending', 'INR', 999.00, '{"totalQuantity":2,"lines":[],"totals":{"subtotalAmount":{"amount":"999.00","currencyCode":"INR"},"totalAmount":{"amount":"999.00","currencyCode":"INR"},"totalTaxAmount":{"amount":"0","currencyCode":"INR"}}}'::jsonb, 'Account demo order')
+ON CONFLICT (id) DO NOTHING;

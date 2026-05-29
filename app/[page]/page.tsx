@@ -44,20 +44,22 @@ export default async function Page(props: {
 
   if (page) {
     return (
-      <>
-        <h1 className="mb-8 text-5xl font-bold">{page.title}</h1>
-        <Prose className="mb-8" html={page.body} />
-        <p className="text-sm italic">
-          {`This document was last updated on ${new Intl.DateTimeFormat(
-            undefined,
-            {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            },
-          ).format(new Date(page.updatedAt))}.`}
-        </p>
-      </>
+      <section className="px-4 sm:px-6 lg:px-8">
+        <div className="mb-6 max-w-2xl space-y-3">
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{page.title}</h1>
+          <Prose className="" html={page.body} />
+          <p className="text-sm italic">
+            {`This document was last updated on ${new Intl.DateTimeFormat(
+              undefined,
+              {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              },
+            ).format(new Date(page.updatedAt))}.`}
+          </p>
+        </div>
+      </section>
     );
   }
 
@@ -74,8 +76,8 @@ export default async function Page(props: {
   });
 
   return (
-    <section>
-      <div className="mb-8 max-w-2xl space-y-3">
+    <section className="px-4 sm:px-6 lg:px-8">
+      <div className="mb-6 max-w-2xl space-y-3">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{collection.title}</h1>
         {collection.description ? (
           <p className="text-sm leading-6 text-neutral-600 dark:text-neutral-400">
@@ -86,9 +88,11 @@ export default async function Page(props: {
       {products.length === 0 ? (
         <p className="py-3 text-lg">No products found in this collection</p>
       ) : (
-        <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <ProductGridItems products={products} />
-        </Grid>
+        <div className="mx-auto max-w-7xl">
+          <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <ProductGridItems products={products} />
+          </Grid>
+        </div>
       )}
     </section>
   );

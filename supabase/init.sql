@@ -53,8 +53,35 @@ CREATE TABLE IF NOT EXISTS menus (
 );
 
 -- Orders (manual UPI flow)
+CREATE TABLE IF NOT EXISTS accounts (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT,
+  shipping_name TEXT,
+  shipping_line1 TEXT,
+  shipping_line2 TEXT,
+  shipping_city TEXT,
+  shipping_state TEXT,
+  shipping_postal_code TEXT,
+  shipping_country TEXT,
+  shipping_phone TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
+  account_id TEXT REFERENCES accounts(id) ON DELETE SET NULL,
+  customer_email TEXT,
+  guest_email TEXT,
+  shipping_name TEXT,
+  shipping_line1 TEXT,
+  shipping_line2 TEXT,
+  shipping_city TEXT,
+  shipping_state TEXT,
+  shipping_postal_code TEXT,
+  shipping_country TEXT,
+  shipping_phone TEXT,
   status TEXT DEFAULT 'pending',
   payment_method TEXT DEFAULT 'upi',
   payment_status TEXT DEFAULT 'pending',

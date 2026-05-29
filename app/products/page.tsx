@@ -20,8 +20,8 @@ export default async function ProductsPage(props: {
   const products = await getProducts({ sortKey, reverse });
 
   return (
-    <section>
-      <div className="mb-8 max-w-2xl space-y-3">
+    <section className="px-4 sm:px-6 lg:px-8">
+      <div className="mb-6 max-w-2xl space-y-3">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">All Products</h1>
         <p className="text-sm leading-6 text-neutral-600 dark:text-neutral-400">
           Browse the full catalog.
