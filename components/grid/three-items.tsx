@@ -1,6 +1,6 @@
 import { GridTileImage } from "components/grid/tile";
 import { defaultSort } from "lib/constants";
-import { getCollectionProducts, getProducts } from "lib/store";
+import { getProducts } from "lib/store";
 import type { Product } from "lib/store/types";
 import Link from "next/link";
 
@@ -49,19 +49,12 @@ function ThreeItemGridItem({
 }
 
 export async function ThreeItemGrid() {
-  // Collections that start with `hidden-*` are hidden from the search page.
-  const homepageItems = await getCollectionProducts({
-    collection: "hidden-homepage-featured-items",
-  });
-
-  const fallbackItems = homepageItems.length
-    ? homepageItems
-    : await getProducts({
-        sortKey: defaultSort.sortKey,
-        reverse: defaultSort.reverse,
-      });
-
-  const visibleItems = fallbackItems.slice(0, 3);
+  const visibleItems = (
+    await getProducts({
+      sortKey: defaultSort.sortKey,
+      reverse: defaultSort.reverse,
+    })
+  ).slice(0, 3);
 
   if (!visibleItems[0]) return null;
 
