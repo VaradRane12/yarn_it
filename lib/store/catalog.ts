@@ -300,7 +300,7 @@ const collections: Collection[] = [
 ];
 
 export const localCatalogData: CatalogData = {
-  products: products.map((p) => ({ ...p, collectionHandles: [] })),
+  products,
   collections,
   pages: [
     {
@@ -345,10 +345,10 @@ export const localCatalogData: CatalogData = {
   ],
   menus: {
     "next-js-frontend-header-menu": [
-      { title: "All Products", path: "/products" },
+      { title: "All Products", path: "/search" },
     ],
     "next-js-frontend-footer-menu": [
-      { title: "All Products", path: "/products" },
+      { title: "All Products", path: "/search" },
       { title: "Shipping", path: "/shipping" },
       { title: "Returns", path: "/returns" },
     ],

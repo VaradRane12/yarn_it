@@ -10,8 +10,8 @@ async function CollectionList() {
     <FilterList
       list={collections.map((collection) =>
         collection.handle
-          ? collection
-          : { ...collection, title: "All Products", path: "/products" },
+          ? { ...collection, path: "/search", collection: collection.handle }
+          : { ...collection, title: "All Products", path: "/search" },
       )}
       title="Categories"
     />
