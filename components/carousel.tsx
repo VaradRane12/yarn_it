@@ -1,20 +1,13 @@
 import { defaultSort } from "lib/constants";
-import { getCollectionProducts, getProducts } from "lib/store";
+import { getProducts } from "lib/store";
 import Link from "next/link";
 import { GridTileImage } from "./grid/tile";
 
 export async function Carousel() {
-  // Collections that start with `hidden-*` are hidden from the search page.
-  const products = await getCollectionProducts({
-    collection: "hidden-homepage-carousel",
+  const carouselSeed = await getProducts({
+    sortKey: defaultSort.sortKey,
+    reverse: defaultSort.reverse,
   });
-
-  const carouselSeed = products.length
-    ? products
-    : await getProducts({
-        sortKey: defaultSort.sortKey,
-        reverse: defaultSort.reverse,
-      });
 
   if (!carouselSeed?.length) return null;
 
