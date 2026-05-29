@@ -1,3 +1,4 @@
+import { isMissingOrdersTableError, MISSING_ORDERS_TABLE_HINT, MISSING_ORDERS_TABLE_MESSAGE } from "lib/store/order-errors";
 import { NextResponse } from "next/server";
 
 const guard = (request: Request) => {
@@ -26,7 +27,16 @@ export async function GET(request: Request) {
   });
 
   const json = await res.json();
-  if (!res.ok) return NextResponse.json({ error: json }, { status: res.status });
+  if (!res.ok) {
+    if (isMissingOrdersTableError(json)) {
+      return NextResponse.json(
+        { error: MISSING_ORDERS_TABLE_MESSAGE, hint: MISSING_ORDERS_TABLE_HINT },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ error: json }, { status: res.status });
+  }
   return NextResponse.json(json);
 }
 
@@ -56,6 +66,15 @@ export async function PATCH(request: Request) {
   });
 
   const text = await res.text();
-  if (!res.ok) return NextResponse.json({ error: text }, { status: res.status });
+  if (!res.ok) {
+    if (isMissingOrdersTableError(text)) {
+      return NextResponse.json(
+        { error: MISSING_ORDERS_TABLE_MESSAGE, hint: MISSING_ORDERS_TABLE_HINT },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ error: text }, { status: res.status });
+  }
   return NextResponse.json({ success: true, result: JSON.parse(text) });
 }

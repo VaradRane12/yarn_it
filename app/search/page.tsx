@@ -20,7 +20,7 @@ export default async function SearchPage(props: {
   const resultsText = products.length > 1 ? "results" : "result";
 
   return (
-    <>
+    <section className="px-4 sm:px-6 lg:px-8">
       {searchValue ? (
         <p className="mb-4">
           {products.length === 0
@@ -30,10 +30,12 @@ export default async function SearchPage(props: {
         </p>
       ) : null}
       {products.length > 0 ? (
-        <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <ProductGridItems products={products} />
-        </Grid>
+        <div className="mx-auto max-w-7xl">
+          <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <ProductGridItems products={products} />
+          </Grid>
+        </div>
       ) : null}
-    </>
+    </section>
   );
 }

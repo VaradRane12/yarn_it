@@ -10,6 +10,14 @@ export type Cart = {
   totalQuantity: number;
 };
 
+export type Account = {
+  id: string;
+  email: string;
+  name?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type CartProduct = {
   id: string;
   handle: string;
@@ -67,6 +75,32 @@ export type Page = {
   body: string;
   bodySummary: string;
   seo?: SEO;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Order = {
+  id: string;
+  status: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  currencyCode: string;
+  totalAmount: Money;
+  cartSnapshot: Cart;
+  paymentReference?: string | null;
+  notes?: string | null;
+  customerEmail?: string | null;
+  guestEmail?: string | null;
+  shipping?: {
+    name?: string | null;
+    line1?: string | null;
+    line2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+    phone?: string | null;
+  };
   createdAt: string;
   updatedAt: string;
 };

@@ -20,7 +20,11 @@ export async function Navbar() {
     })
     .map((c) => ({ title: c.title, path: c.path }));
 
-  const menu = [{ title: "All Products", path: "/products" }, ...categoryMenu];
+  const utilityMenu = [
+    { title: "My Orders", path: "/orders" },
+  ];
+
+  const menu = [{ title: "All Products", path: "/products" }, ...categoryMenu, ...utilityMenu];
 
   return (
     <nav className="relative flex items-center justify-between p-4 lg:px-6">
@@ -72,6 +76,17 @@ export async function Navbar() {
                   </ul>
                 </li>
               ) : null}
+              {utilityMenu.map((item) => (
+                <li key={item.title}>
+                  <Link
+                    href={item.path}
+                    prefetch={true}
+                    className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
+                  >
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
             </ul>
           ) : null}
         </div>

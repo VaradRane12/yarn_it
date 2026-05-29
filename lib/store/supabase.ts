@@ -1,7 +1,8 @@
 import { DEFAULT_CURRENCY_CODE } from "lib/constants";
 import { toStorageProxyUrlFromSupabaseUrl } from "lib/storage-images";
 import { localCatalogData } from "./catalog";
-import { CatalogData, CatalogProduct, Collection, Menu, Page, Product } from "./types";
+import { isMissingOrdersTableError, MISSING_ORDERS_TABLE_MESSAGE } from "./order-errors";
+import { CatalogData, CatalogProduct, Collection, Menu, Order, Page, Product } from "./types";
 
 type SupabaseProductRow = {
   id: string;
@@ -48,6 +49,30 @@ type SupabaseMenuRow = {
   title: string;
   path: string;
   position: number;
+};
+
+type SupabaseOrderRow = {
+  id: string;
+  status: string;
+  payment_method: string;
+  payment_status: string;
+  currency_code: string;
+  total_amount: string | number;
+  cart_snapshot: Order["cartSnapshot"];
+  payment_reference?: string | null;
+  notes?: string | null;
+  customer_email?: string | null;
+  guest_email?: string | null;
+  shipping_name?: string | null;
+  shipping_line1?: string | null;
+  shipping_line2?: string | null;
+  shipping_city?: string | null;
+  shipping_state?: string | null;
+  shipping_postal_code?: string | null;
+  shipping_country?: string | null;
+  shipping_phone?: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 function hasPlaceholder(value: string | undefined) {
@@ -258,6 +283,9 @@ async function fetchTable<T>(table: string, select: string): Promise<T[]> {
 
   if (!response.ok) {
     const body = await response.text();
+    if (table === "orders" && isMissingOrdersTableError(body)) {
+      throw new Error(MISSING_ORDERS_TABLE_MESSAGE);
+    }
     throw new Error(`Supabase ${table} fetch failed (${response.status}): ${body}`);
   }
 
@@ -319,6 +347,35 @@ function toPage(row: SupabasePageRow): Page {
   };
 }
 
+function toOrder(row: SupabaseOrderRow): Order {
+  const totalAmount = Number(row.total_amount || 0);
+  return {
+    id: row.id,
+    status: row.status,
+    paymentMethod: row.payment_method,
+    paymentStatus: row.payment_status,
+    currencyCode: row.currency_code || DEFAULT_CURRENCY_CODE,
+    totalAmount: createMoney(totalAmount, row.currency_code || DEFAULT_CURRENCY_CODE),
+    cartSnapshot: row.cart_snapshot,
+    paymentReference: row.payment_reference || null,
+    notes: row.notes || null,
+    customerEmail: row.customer_email || null,
+    guestEmail: row.guest_email || null,
+    shipping: {
+      name: row.shipping_name || null,
+      line1: row.shipping_line1 || null,
+      line2: row.shipping_line2 || null,
+      city: row.shipping_city || null,
+      state: row.shipping_state || null,
+      postalCode: row.shipping_postal_code || null,
+      country: row.shipping_country || null,
+      phone: row.shipping_phone || null,
+    },
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export async function getCatalogFromSupabase(): Promise<CatalogData> {
   const { hasSupabaseConfig } = getSupabaseEnv();
 
@@ -369,4 +426,45 @@ export async function getCatalogFromSupabase(): Promise<CatalogData> {
     console.error("Falling back to local catalog because Supabase failed:", error);
     return localCatalogData;
   }
+}
+
+export async function getOrdersFromSupabase(filter?: { email?: string; orderId?: string }): Promise<Order[]> {
+  const { hasSupabaseConfig, supabaseUrl, supabaseKey } = getSupabaseEnv();
+
+  if (!hasSupabaseConfig || !supabaseUrl || !supabaseKey) {
+    return [];
+  }
+
+  const query = new URLSearchParams({
+    select: "*",
+    order: "created_at.desc",
+  });
+
+  if (filter?.orderId) {
+    query.set("id", `eq.${filter.orderId}`);
+  }
+
+  if (filter?.email) {
+    const email = filter.email.trim().toLowerCase();
+    query.set("or", `(customer_email.eq.${email},guest_email.eq.${email})`);
+  }
+
+  const response = await fetch(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/orders?${query.toString()}`, {
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    if (isMissingOrdersTableError(body)) {
+      throw new Error(MISSING_ORDERS_TABLE_MESSAGE);
+    }
+    throw new Error(`Supabase orders fetch failed (${response.status}): ${body}`);
+  }
+
+  const rows = (await response.json()) as SupabaseOrderRow[];
+  return rows.map(toOrder);
 }
