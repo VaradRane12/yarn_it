@@ -70,7 +70,7 @@ const products: CatalogData["products"] = [
     },
     tags: ["apparel"],
     updatedAt: now,
-    collectionHandles: ["summer-drops", "hidden-homepage-featured-items"],
+    collectionHandles: ["summer-drops"],
     recommendationIds: ["prod_city_hoodie", "prod_everyday_cap"],
     salesRank: 90,
   },
@@ -120,7 +120,7 @@ const products: CatalogData["products"] = [
     },
     tags: ["apparel", "trending"],
     updatedAt: now,
-    collectionHandles: ["summer-drops", "hidden-homepage-featured-items"],
+    collectionHandles: ["summer-drops"],
     recommendationIds: ["prod_vintage_tee", "prod_studio_notebook"],
     salesRank: 95,
   },
@@ -167,7 +167,7 @@ const products: CatalogData["products"] = [
     },
     tags: ["accessories"],
     updatedAt: now,
-    collectionHandles: ["accessories", "hidden-homepage-featured-items"],
+    collectionHandles: ["accessories"],
     recommendationIds: ["prod_trail_bottle", "prod_everyday_cap"],
     salesRank: 78,
   },
@@ -201,7 +201,7 @@ const products: CatalogData["products"] = [
     },
     tags: ["accessories"],
     updatedAt: now,
-    collectionHandles: ["accessories", "hidden-homepage-carousel"],
+    collectionHandles: ["accessories"],
     recommendationIds: ["prod_canvas_tote", "prod_trail_bottle"],
     salesRank: 73,
   },
@@ -235,7 +235,7 @@ const products: CatalogData["products"] = [
     },
     tags: ["accessories", "outdoors"],
     updatedAt: now,
-    collectionHandles: ["accessories", "hidden-homepage-carousel"],
+    collectionHandles: ["accessories"],
     recommendationIds: ["prod_canvas_tote", "prod_studio_notebook"],
     salesRank: 70,
   },
@@ -271,7 +271,7 @@ const products: CatalogData["products"] = [
     },
     tags: ["stationery"],
     updatedAt: now,
-    collectionHandles: ["hidden-homepage-carousel"],
+    collectionHandles: [],
     recommendationIds: ["prod_trail_bottle", "prod_city_hoodie"],
     salesRank: 60,
   },
@@ -291,31 +291,14 @@ const collection = (
 });
 
 const collections: Collection[] = [
-  collection(
-    "hidden-homepage-featured-items",
-    "Featured",
-    "Homepage featured products.",
-  ),
-  collection("hidden-homepage-carousel", "Carousel", "Homepage carousel products."),
+  collection("summer-drops", "Summer Drops", "New seasonal items."),
+  collection("accessories", "Accessories", "Daily accessories and small goods."),
 ];
 
 export const localCatalogData: CatalogData = {
   products,
   collections,
   pages: [
-    {
-      id: "page_shipping",
-      title: "Shipping",
-      handle: "shipping",
-      body: "<p>Orders ship within 2 business days. Tracking is emailed automatically.</p>",
-      bodySummary: "Shipping policy and delivery expectations.",
-      seo: {
-        title: "Shipping",
-        description: "Shipping policy and delivery expectations.",
-      },
-      createdAt: now,
-      updatedAt: now,
-    },
     {
       id: "page_shipping",
       title: "Shipping",

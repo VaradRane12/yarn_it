@@ -106,6 +106,7 @@ export async function DELETE(request: Request) {
   });
 
   const text = await res.text();
-  if (!res.ok) return NextResponse.json({ error: text }, { status: res.status });
-  return NextResponse.json({ success: true, result: JSON.parse(text) });
+  const result = text.trim() ? JSON.parse(text) : null;
+  if (!res.ok) return NextResponse.json({ error: result }, { status: res.status });
+  return NextResponse.json({ success: true, result });
 }

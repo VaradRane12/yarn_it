@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function FormField({ children }: { children: React.ReactNode }) {
   return <div className="mb-4">{children}</div>;
@@ -173,6 +173,14 @@ export default function AdminPage() {
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [editingCollectionHandle, setEditingCollectionHandle] = useState<string | null>(null);
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!adminPassword) return;
+
+    void loadAll();
+    // Reloading when the password changes keeps the product/category lists in sync
+    // without requiring a separate manual "Load data" click.
+  }, [adminPassword]);
 
   async function loadAll() {
     if (!adminPassword) return;
@@ -541,7 +549,14 @@ export default function AdminPage() {
                 <li key={c.handle} className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="font-medium">{c.title}</div>
+                      <div className="flex items-center gap-2 font-medium">
+                        <span>{c.title}</span>
+                        {c.hidden ? (
+                          <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-600">
+                            hidden
+                          </span>
+                        ) : null}
+                      </div>
                       <div className="text-sm text-neutral-500">{c.handle}</div>
                     </div>
                     <div className="flex gap-2">

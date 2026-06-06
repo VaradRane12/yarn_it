@@ -120,6 +120,19 @@ function safeRevalidate(tag: string) {
   }
 }
 
+async function readJsonResponse(response: Response) {
+  const text = await response.text();
+  if (!text.trim()) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
 export async function GET(request: Request) {
   if (!guard(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { supabaseUrl, supabaseKey } = getSupabaseEnv();
