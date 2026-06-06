@@ -91,7 +91,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: body }, { status: res.status });
     }
 
-    const redirectUrl = new URL(`/upi-checkout`, request.url);
+    // Build the redirect URL using the public host (fixes localhost redirect on proxied VPS).
+    // We read the Host header which always reflects the public domain, then fall back
+    // to VERCEL_PROJECT_PRODUCTION_URL, and finally to request.url.
+    const reqHeaders = request.headers;
+    const host = reqHeaders.get("x-forwarded-host") || reqHeaders.get("host");
+    const proto = reqHeaders.get("x-forwarded-proto") || "https";
+    const siteUrl = host
+      ? `${proto}://${host}`
+      : process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : new URL(request.url).origin;
+
+    const redirectUrl = new URL(`/upi-checkout`, siteUrl);
     redirectUrl.searchParams.set("amount", String(cart.cost.totalAmount.amount));
     redirectUrl.searchParams.set("currency", cart.cost.totalAmount.currencyCode);
     redirectUrl.searchParams.set("orderId", orderId);
