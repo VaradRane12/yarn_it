@@ -91,17 +91,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: body }, { status: res.status });
     }
 
-    // Build the redirect URL using the public host (fixes localhost redirect on proxied VPS).
-    // We read the Host header which always reflects the public domain, then fall back
-    // to VERCEL_PROJECT_PRODUCTION_URL, and finally to request.url.
-    const reqHeaders = request.headers;
-    const host = reqHeaders.get("x-forwarded-host") || reqHeaders.get("host");
-    const proto = reqHeaders.get("x-forwarded-proto") || "https";
-    const siteUrl = host
-      ? `${proto}://${host}`
-      : process.env.VERCEL_PROJECT_PRODUCTION_URL
-        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-        : new URL(request.url).origin;
+    // Build the redirect URL.
+    // Priority: explicit NEXT_PUBLIC_SITE_URL env var (most reliable for CF Tunnel / proxies)
+    //   → x-forwarded-host header → host header → VERCEL_PROJECT_PRODUCTION_URL → request origin
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+      (() => {
+        const reqHeaders = request.headers;
+        const host = reqHeaders.get("x-forwarded-host") || reqHeaders.get("host");
+        const proto = reqHeaders.get("x-forwarded-proto") || "https";
+        if (host) return `${proto}://${host}`;
+        if (process.env.VERCEL_PROJECT_PRODUCTION_URL)
+          return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+        return new URL(request.url).origin;
+      })();
 
     const redirectUrl = new URL(`/upi-checkout`, siteUrl);
     redirectUrl.searchParams.set("amount", String(cart.cost.totalAmount.amount));
