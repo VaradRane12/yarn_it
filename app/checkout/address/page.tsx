@@ -1,10 +1,14 @@
+import { cookies } from "next/headers";
 
 export const metadata = {
   title: "Shipping address",
   description: "Enter shipping address before completing checkout",
 };
 
-export default function AddressPage() {
+export default async function AddressPage() {
+  const cookieStore = await cookies();
+  const cartId = cookieStore.get("cartId")?.value ?? "";
+
   return (
     <section className="mx-auto max-w-xl py-10">
       <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
@@ -12,6 +16,9 @@ export default function AddressPage() {
         <p className="mt-2 text-sm text-neutral-600">We need your shipping details before creating the order.</p>
 
         <form action="/api/checkout/address" method="post" className="mt-6 space-y-4">
+          {/* Pass cartId so the API route can look up the cart directly */}
+          <input type="hidden" name="cartId" value={cartId} />
+
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-neutral-700">Full name</span>
             <input name="name" className="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-rose-500" placeholder="Full name" />

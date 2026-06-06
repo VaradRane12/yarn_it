@@ -95,3 +95,51 @@ Order confirmation:
 - In `Orders`, mark the order paid/pending/cancelled after manual verification
 
 Note: this is a manual confirmation flow. For automatic payment verification and order status updates, add a payment gateway webhook flow later.
+
+## Craft price estimator
+
+There is a standalone Python script in `tools/price_estimator.py` that uses a remote Ollama server for image analysis and a web search pass for rough market context.
+
+Install the Python dependencies on the machine where you want to run it:
+
+```bash
+pip install -r tools/requirements-price-estimator.txt
+```
+
+Set the Ollama host to your remote machine:
+
+```bash
+export OLLAMA_HOST=http://192.168.0.102:11434
+```
+
+Then run it like this:
+
+```bash
+python tools/price_estimator.py /path/to/image.jpg "12 cm tall"
+```
+
+If your remote Ollama host uses different model names, override them with `VISION_MODEL` and `TEXT_MODEL`.
+
+## Docker for the price estimator
+
+You can also run the estimator in Docker so you do not need to install Python packages on the host.
+
+Build the image:
+
+```bash
+docker compose -f docker-compose.price-estimator.yml build
+```
+
+Run it against an image on your machine:
+
+```bash
+docker compose -f docker-compose.price-estimator.yml run --name price-estimator estimator /workspace/path/to/image.jpg "12 cm tall"
+```
+
+If you want to watch the output, keep the container name and follow its logs:
+
+```bash
+docker logs -f price-estimator
+```
+
+The container already points to `http://192.168.0.102:11434` for Ollama. Change `OLLAMA_HOST` in `docker-compose.price-estimator.yml` if the model server moves.

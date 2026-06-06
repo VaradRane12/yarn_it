@@ -1,4 +1,4 @@
-import { getCart } from "lib/store";
+import { getCart, getCartById } from "lib/store";
 import { isMissingOrdersTableError, MISSING_ORDERS_TABLE_HINT, MISSING_ORDERS_TABLE_MESSAGE } from "lib/store/order-errors";
 import { NextResponse } from "next/server";
 
@@ -30,12 +30,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
   }
 
-  const cart = await getCart();
+  // Prefer the cartId passed via hidden form field (avoids "use cache" issues in Route Handlers).
+  // Fall back to the cookie-based lookup.
+  const formCartId = String(form.get("cartId") || "").trim();
+  const cart = formCartId ? getCartById(formCartId) : await getCart();
+
   if (!cart) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
 
   const orderId = `ord_${crypto.randomUUID().replace(/-/g, "")}`;
+
   const payload = {
     id: orderId,
     status: "pending",

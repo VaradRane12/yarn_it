@@ -382,6 +382,17 @@ export async function getCart(): Promise<Cart | undefined> {
   return normalized;
 }
 
+/**
+ * Non-cached cart lookup by explicit ID.
+ * Use this in Route Handlers where "use cache: private" does not work reliably.
+ */
+export function getCartById(cartId: string): Cart | undefined {
+  if (!cartId) return undefined;
+  const cart = getCartStore().get(cartId);
+  if (!cart) return undefined;
+  return normalizeCartCurrency(cart);
+}
+
 export async function getCollection(handle: string): Promise<Collection | undefined> {
   "use cache";
   cacheTag(TAGS.collections);

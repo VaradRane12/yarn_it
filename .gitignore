@@ -40,3 +40,12 @@ supabase/.temp/
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# Price estimator (Python) - kept local only
+/tools/
+/app/estimate/
+/app/api/estimate/
+docker-compose.price-estimator.yml
+
+# Local photos/assets
+/photos/
