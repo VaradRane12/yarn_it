@@ -4,7 +4,7 @@ import Footer from "components/layout/footer";
 
 export const metadata = {
   description:
-    "High-performance ecommerce store built with Next.js and a pluggable local or database-backed catalog.",
+    "Handmade crochet and knitted products crafted with love. Browse our unique collection of handmade goods and patterns.",
   openGraph: {
     type: "website",
   },
