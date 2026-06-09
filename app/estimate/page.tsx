@@ -108,7 +108,13 @@ export default function EstimatePage() {
       fd.append("dimensions", dimensions);
       fd.append("email", email.trim());
       const res = await fetch("/api/estimate", { method: "POST", body: fd });
-      const json = (await res.json()) as EstimateResponse;
+      const text = await res.text();
+      let json: EstimateResponse;
+      try {
+        json = JSON.parse(text);
+      } catch (parseErr) {
+        throw new Error(`Server returned an invalid response (Status ${res.status}): ${text.substring(0, 50) || "Empty response"}`);
+      }
       if (!res.ok || !json.success)
         throw new Error(json.error ?? "Failed to estimate price");
       setResult(json);

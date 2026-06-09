@@ -8,6 +8,7 @@
  * direct-Ollama path so the page doesn't completely break.
  */
 import { NextResponse } from "next/server";
+import { notify } from "lib/notify";
 
 const ESTIMATOR_URL =
   process.env.ESTIMATOR_API_URL ||
@@ -128,6 +129,16 @@ export async function POST(request: Request) {
       }
 
       const data = await resp.json();
+      
+      // Send a notification with the estimate details
+      notify(
+        `📸 **New Estimate Request!**\n` +
+        `- **Customer:** ${email || "Anonymous"}\n` +
+        `- **Dimensions:** ${dimensions}\n` +
+        `- **Time Est:** ${data.hours_low}-${data.hours_high} hrs\n` +
+        `- **Price Est:** ₹${data.suggested_price_low} - ₹${data.suggested_price_high}\n`
+      );
+
       return NextResponse.json({ success: true, source: "python", ...data });
     } catch (proxyErr) {
       console.warn(
