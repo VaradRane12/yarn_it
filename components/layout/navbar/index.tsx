@@ -21,12 +21,12 @@ export async function Navbar() {
     .map((c) => ({ title: c.title, path: c.path }));
 
   const utilityMenu = [
-    { title: "My Orders", path: "/orders" },
-    { title: "Price Estimator", path: "/estimate" },
+    { title: "Orders", path: "/orders" },
+    { title: "Estimator", path: "/estimate" },
   ];
 
   const menu = [
-    { title: "All Products", path: "/search" },
+    { title: "Products", path: "/search" },
     ...categoryMenu,
     ...utilityMenu,
   ];
@@ -58,7 +58,7 @@ export async function Navbar() {
                   prefetch={true}
                   className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
                 >
-                  All Products
+                  Products
                 </Link>
               </li>
               {categoryMenu.length ? (
