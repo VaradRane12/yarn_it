@@ -9,7 +9,7 @@ WORKDIR /app
 RUN corepack enable pnpm
 
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
-RUN pnpm i --frozen-lockfile
+RUN pnpm config set fetch-timeout 600000 && pnpm i --frozen-lockfile
 
 # Rebuild the source code only when needed
 FROM base AS builder
