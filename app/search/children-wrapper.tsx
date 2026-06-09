@@ -11,7 +11,9 @@ export default function ChildrenWrapper({
 }) {
   const searchParams = useSearchParams();
   return (
-    <Fragment key={`${searchParams.get("q") || ""}-${searchParams.get("collection") || ""}-${searchParams.get("sort") || ""}`}>
+    <Fragment
+      key={`${searchParams.get("q") || ""}-${searchParams.get("collection") || ""}-${searchParams.get("sort") || ""}`}
+    >
       {children}
     </Fragment>
   );

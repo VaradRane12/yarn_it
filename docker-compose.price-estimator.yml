@@ -1,0 +1,12 @@
+services:
+  estimator:
+    build:
+      context: .
+      dockerfile: tools/price-estimator.Dockerfile
+    environment:
+      OLLAMA_HOST: http://192.168.0.102:11434
+    volumes:
+      - ./:/workspace:ro
+    working_dir: /workspace
+    tty: true
+    stdin_open: true

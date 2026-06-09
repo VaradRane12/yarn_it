@@ -42,22 +42,32 @@ async function handleRequest(
 
   const response = await fetchStorageObject(bucket, objectPath);
   if (!response) {
-    return NextResponse.json({ error: "Failed to load storage object" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to load storage object" },
+      { status: 500 },
+    );
   }
 
   return new NextResponse(response.body, {
     status: response.status,
     headers: {
-      "Content-Type": response.headers.get("content-type") || "application/octet-stream",
+      "Content-Type":
+        response.headers.get("content-type") || "application/octet-stream",
       "Cache-Control": "public, max-age=31536000, immutable",
     },
   });
 }
 
-export async function GET(request: NextRequest, context: { params: Promise<{ bucket: string; path: string[] }> }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ bucket: string; path: string[] }> },
+) {
   return handleRequest(request, context);
 }
 
-export async function HEAD(request: NextRequest, context: { params: Promise<{ bucket: string; path: string[] }> }) {
+export async function HEAD(
+  request: NextRequest,
+  context: { params: Promise<{ bucket: string; path: string[] }> },
+) {
   return handleRequest(request, context);
 }

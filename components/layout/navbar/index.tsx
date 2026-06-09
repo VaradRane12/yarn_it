@@ -22,9 +22,14 @@ export async function Navbar() {
 
   const utilityMenu = [
     { title: "My Orders", path: "/orders" },
+    { title: "Price Estimator", path: "/estimate" },
   ];
 
-  const menu = [{ title: "All Products", path: "/search" }, ...categoryMenu, ...utilityMenu];
+  const menu = [
+    { title: "All Products", path: "/search" },
+    ...categoryMenu,
+    ...utilityMenu,
+  ];
 
   return (
     <nav className="relative flex items-center justify-between p-4 lg:px-6">

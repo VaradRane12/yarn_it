@@ -2,7 +2,10 @@ export const STORAGE_BUCKET_NAME = "yarnPhotos";
 
 const SUPABASE_STORAGE_PUBLIC_PREFIX = "/storage/v1/object/public/";
 
-export function toStorageProxyUrl(objectPath: string, bucket = STORAGE_BUCKET_NAME) {
+export function toStorageProxyUrl(
+  objectPath: string,
+  bucket = STORAGE_BUCKET_NAME,
+) {
   return `/api/storage/${bucket}/${objectPath}`;
 }
 
@@ -18,7 +21,9 @@ export function toStorageProxyUrlFromSupabaseUrl(url: string) {
       return url;
     }
 
-    const objectPath = parsed.pathname.slice(prefixIndex + SUPABASE_STORAGE_PUBLIC_PREFIX.length);
+    const objectPath = parsed.pathname.slice(
+      prefixIndex + SUPABASE_STORAGE_PUBLIC_PREFIX.length,
+    );
     const [bucket, ...pathSegments] = objectPath.split("/").filter(Boolean);
 
     if (!bucket || pathSegments.length === 0) {

@@ -1,5 +1,9 @@
 import { getCart } from "lib/store";
-import { isMissingOrdersTableError, MISSING_ORDERS_TABLE_HINT, MISSING_ORDERS_TABLE_MESSAGE } from "lib/store/order-errors";
+import {
+  isMissingOrdersTableError,
+  MISSING_ORDERS_TABLE_HINT,
+  MISSING_ORDERS_TABLE_MESSAGE,
+} from "lib/store/order-errors";
 import { NextResponse } from "next/server";
 
 function getSupabaseEnv() {
@@ -22,12 +26,18 @@ export async function POST(request: Request) {
   const phone = String(form.get("phone") || "").trim() || null;
 
   if (!line1 || !city || !postalCode || !country) {
-    return NextResponse.json({ error: "Please provide a valid address." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Please provide a valid address." },
+      { status: 400 },
+    );
   }
 
   const { supabaseUrl, supabaseKey } = getSupabaseEnv();
   if (!supabaseUrl || !supabaseKey) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Supabase not configured" },
+      { status: 500 },
+    );
   }
 
   const cart = await getCart();
@@ -57,16 +67,19 @@ export async function POST(request: Request) {
   };
 
   try {
-    const res = await fetch(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/orders`, {
-      method: "POST",
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-        "Content-Type": "application/json",
-        Prefer: "return=representation",
+    const res = await fetch(
+      `${supabaseUrl.replace(/\/$/, "")}/rest/v1/orders`,
+      {
+        method: "POST",
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    });
+    );
 
     if (!res.ok) {
       const body = await res.text();
@@ -87,25 +100,60 @@ export async function POST(request: Request) {
     }
 
     const redirectUrl = new URL(`/upi-checkout`, request.url);
-    redirectUrl.searchParams.set("amount", String(cart.cost.totalAmount.amount));
-    redirectUrl.searchParams.set("currency", cart.cost.totalAmount.currencyCode);
+    redirectUrl.searchParams.set(
+      "amount",
+      String(cart.cost.totalAmount.amount),
+    );
+    redirectUrl.searchParams.set(
+      "currency",
+      cart.cost.totalAmount.currencyCode,
+    );
     redirectUrl.searchParams.set("orderId", orderId);
 
     const output = NextResponse.redirect(redirectUrl);
     // set cookies for address so subsequent flows can reuse
-    output.cookies.set("shippingName", name || "", { path: "/", sameSite: "lax" });
+    output.cookies.set("shippingName", name || "", {
+      path: "/",
+      sameSite: "lax",
+    });
     output.cookies.set("shippingLine1", line1, { path: "/", sameSite: "lax" });
-    if (line2) output.cookies.set("shippingLine2", line2, { path: "/", sameSite: "lax" });
+    if (line2)
+      output.cookies.set("shippingLine2", line2, {
+        path: "/",
+        sameSite: "lax",
+      });
     output.cookies.set("shippingCity", city, { path: "/", sameSite: "lax" });
-    if (state) output.cookies.set("shippingState", state, { path: "/", sameSite: "lax" });
-    output.cookies.set("shippingPostalCode", postalCode, { path: "/", sameSite: "lax" });
-    output.cookies.set("shippingCountry", country, { path: "/", sameSite: "lax" });
-    if (phone) output.cookies.set("shippingPhone", phone, { path: "/", sameSite: "lax" });
-    if (email) output.cookies.set("customerEmail", email, { path: "/", sameSite: "lax" });
-    if (name) output.cookies.set("customerName", name, { path: "/", sameSite: "lax" });
+    if (state)
+      output.cookies.set("shippingState", state, {
+        path: "/",
+        sameSite: "lax",
+      });
+    output.cookies.set("shippingPostalCode", postalCode, {
+      path: "/",
+      sameSite: "lax",
+    });
+    output.cookies.set("shippingCountry", country, {
+      path: "/",
+      sameSite: "lax",
+    });
+    if (phone)
+      output.cookies.set("shippingPhone", phone, {
+        path: "/",
+        sameSite: "lax",
+      });
+    if (email)
+      output.cookies.set("customerEmail", email, {
+        path: "/",
+        sameSite: "lax",
+      });
+    if (name)
+      output.cookies.set("customerName", name, { path: "/", sameSite: "lax" });
 
     return output;
   } catch (e) {
-    return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create order" },
+      { status: 500 },
+    );
   }
 }

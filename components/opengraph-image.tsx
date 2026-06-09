@@ -29,7 +29,6 @@ export default async function OpengraphImage(
   );
   const logoSrc = `data:image/svg+xml;base64,${Buffer.from(logo).toString("base64")}`;
 
-
   return new ImageResponse(
     (
       <div tw="flex h-full w-full flex-col items-center justify-center bg-black">

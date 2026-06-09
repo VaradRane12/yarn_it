@@ -16,7 +16,7 @@ export function isMissingOrdersTableError(error: unknown) {
 
   return (
     message.includes("Could not find the table 'public.orders'") ||
-    message.includes("Could not find the table \"public.orders\"") ||
-    message.includes("public.orders") && message.includes("PGRST205")
+    message.includes('Could not find the table "public.orders"') ||
+    (message.includes("public.orders") && message.includes("PGRST205"))
   );
 }

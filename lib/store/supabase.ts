@@ -1,8 +1,19 @@
 import { DEFAULT_CURRENCY_CODE } from "lib/constants";
 import { toStorageProxyUrlFromSupabaseUrl } from "lib/storage-images";
 import { localCatalogData } from "./catalog";
-import { isMissingOrdersTableError, MISSING_ORDERS_TABLE_MESSAGE } from "./order-errors";
-import { CatalogData, CatalogProduct, Collection, Menu, Order, Page, Product } from "./types";
+import {
+  isMissingOrdersTableError,
+  MISSING_ORDERS_TABLE_MESSAGE,
+} from "./order-errors";
+import {
+  CatalogData,
+  CatalogProduct,
+  Collection,
+  Menu,
+  Order,
+  Page,
+  Product,
+} from "./types";
 
 type SupabaseProductRow = {
   id: string;
@@ -94,7 +105,9 @@ function createMoney(amount: number, currencyCode = DEFAULT_CURRENCY_CODE) {
   };
 }
 
-function isMoneyLike(value: unknown): value is { amount: string; currencyCode: string } {
+function isMoneyLike(
+  value: unknown,
+): value is { amount: string; currencyCode: string } {
   return Boolean(
     value &&
       typeof value === "object" &&
@@ -128,7 +141,10 @@ function coerceMoney(value: unknown, currencyCode = DEFAULT_CURRENCY_CODE) {
   return createMoney(0, currencyCode);
 }
 
-function normalizePriceRangeValue(value: unknown, currencyCode = DEFAULT_CURRENCY_CODE) {
+function normalizePriceRangeValue(
+  value: unknown,
+  currencyCode = DEFAULT_CURRENCY_CODE,
+) {
   if (isPriceRangeLike(value)) {
     return {
       minVariantPrice: coerceMoney(value.minVariantPrice, currencyCode),
@@ -192,7 +208,9 @@ function normalizeDescriptionHtml(row: SupabaseProductRow) {
     return row.description_html;
   }
 
-  const escapedDescription = (row.description || "").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  const escapedDescription = (row.description || "")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
   return escapedDescription ? `<p>${escapedDescription}</p>` : "";
 }
 
@@ -232,7 +250,10 @@ function normalizeImages(row: SupabaseProductRow) {
 }
 
 function normalizeFeaturedImage(row: SupabaseProductRow) {
-  const image = row.featured_image || row.images?.[0] || defaultImage(row.handle, row.title);
+  const image =
+    row.featured_image ||
+    row.images?.[0] ||
+    defaultImage(row.handle, row.title);
   return {
     ...image,
     url: normalizeImageUrl(image.url),
@@ -242,7 +263,8 @@ function normalizeFeaturedImage(row: SupabaseProductRow) {
 function getSupabaseEnv() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   const hasSupabaseConfig = Boolean(
     supabaseUrl &&
@@ -260,7 +282,10 @@ function isNextPprBailoutError(error: unknown): boolean {
   }
 
   const maybeSymbol = (error as { $$typeof?: unknown }).$$typeof;
-  return typeof maybeSymbol === "symbol" && maybeSymbol.toString() === "Symbol(react.postpone)";
+  return (
+    typeof maybeSymbol === "symbol" &&
+    maybeSymbol.toString() === "Symbol(react.postpone)"
+  );
 }
 
 async function fetchTable<T>(table: string, select: string): Promise<T[]> {
@@ -286,7 +311,9 @@ async function fetchTable<T>(table: string, select: string): Promise<T[]> {
     if (table === "orders" && isMissingOrdersTableError(body)) {
       throw new Error(MISSING_ORDERS_TABLE_MESSAGE);
     }
-    throw new Error(`Supabase ${table} fetch failed (${response.status}): ${body}`);
+    throw new Error(
+      `Supabase ${table} fetch failed (${response.status}): ${body}`,
+    );
   }
 
   return response.json();
@@ -310,11 +337,10 @@ function toCatalogProduct(row: SupabaseProductRow): CatalogProduct {
     variants,
     featuredImage,
     images,
-    seo:
-      row.seo || {
-        title: row.title,
-        description: row.description,
-      },
+    seo: row.seo || {
+      title: row.title,
+      description: row.description,
+    },
     tags: row.tags || [],
     updatedAt: row.updated_at,
     collectionHandles: row.collection_handles || [],
@@ -355,7 +381,10 @@ function toOrder(row: SupabaseOrderRow): Order {
     paymentMethod: row.payment_method,
     paymentStatus: row.payment_status,
     currencyCode: row.currency_code || DEFAULT_CURRENCY_CODE,
-    totalAmount: createMoney(totalAmount, row.currency_code || DEFAULT_CURRENCY_CODE),
+    totalAmount: createMoney(
+      totalAmount,
+      row.currency_code || DEFAULT_CURRENCY_CODE,
+    ),
     cartSnapshot: row.cart_snapshot,
     paymentReference: row.payment_reference || null,
     notes: row.notes || null,
@@ -384,24 +413,23 @@ export async function getCatalogFromSupabase(): Promise<CatalogData> {
   }
 
   try {
-    const [productRows, collectionRows, pageRows, menuRows] = await Promise.all([
-      fetchTable<SupabaseProductRow>(
-        "products",
-        "id,handle,available_for_sale,title,description,description_html,options,price_range,variants,featured_image,images,seo,tags,updated_at,collection_handles,recommendation_ids,sales_rank",
-      ),
-      fetchTable<SupabaseCollectionRow>(
-        "collections",
-        "handle,title,description,seo,updated_at,hidden",
-      ),
-      fetchTable<SupabasePageRow>(
-        "pages",
-        "id,title,handle,body,body_summary,seo,created_at,updated_at",
-      ),
-      fetchTable<SupabaseMenuRow>(
-        "menus",
-        "handle,title,path,position",
-      ),
-    ]);
+    const [productRows, collectionRows, pageRows, menuRows] = await Promise.all(
+      [
+        fetchTable<SupabaseProductRow>(
+          "products",
+          "id,handle,available_for_sale,title,description,description_html,options,price_range,variants,featured_image,images,seo,tags,updated_at,collection_handles,recommendation_ids,sales_rank",
+        ),
+        fetchTable<SupabaseCollectionRow>(
+          "collections",
+          "handle,title,description,seo,updated_at,hidden",
+        ),
+        fetchTable<SupabasePageRow>(
+          "pages",
+          "id,title,handle,body,body_summary,seo,created_at,updated_at",
+        ),
+        fetchTable<SupabaseMenuRow>("menus", "handle,title,path,position"),
+      ],
+    );
 
     const menus = menuRows
       .sort((a, b) => a.position - b.position)
@@ -423,12 +451,18 @@ export async function getCatalogFromSupabase(): Promise<CatalogData> {
       throw error;
     }
 
-    console.error("Falling back to local catalog because Supabase failed:", error);
+    console.error(
+      "Falling back to local catalog because Supabase failed:",
+      error,
+    );
     return localCatalogData;
   }
 }
 
-export async function getOrdersFromSupabase(filter?: { email?: string; orderId?: string }): Promise<Order[]> {
+export async function getOrdersFromSupabase(filter?: {
+  email?: string;
+  orderId?: string;
+}): Promise<Order[]> {
   const { hasSupabaseConfig, supabaseUrl, supabaseKey } = getSupabaseEnv();
 
   if (!hasSupabaseConfig || !supabaseUrl || !supabaseKey) {
@@ -449,20 +483,25 @@ export async function getOrdersFromSupabase(filter?: { email?: string; orderId?:
     query.set("or", `(customer_email.eq.${email},guest_email.eq.${email})`);
   }
 
-  const response = await fetch(`${supabaseUrl.replace(/\/$/, "")}/rest/v1/orders?${query.toString()}`, {
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
+  const response = await fetch(
+    `${supabaseUrl.replace(/\/$/, "")}/rest/v1/orders?${query.toString()}`,
+    {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      cache: "no-store",
     },
-    cache: "no-store",
-  });
+  );
 
   if (!response.ok) {
     const body = await response.text();
     if (isMissingOrdersTableError(body)) {
       throw new Error(MISSING_ORDERS_TABLE_MESSAGE);
     }
-    throw new Error(`Supabase orders fetch failed (${response.status}): ${body}`);
+    throw new Error(
+      `Supabase orders fetch failed (${response.status}): ${body}`,
+    );
   }
 
   const rows = (await response.json()) as SupabaseOrderRow[];

@@ -85,13 +85,22 @@ function imagePreviewList(images: AdminImage[]) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {images.map((image, index) => (
-        <div key={`${image.url}-${index}`} className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+        <div
+          key={`${image.url}-${index}`}
+          className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm"
+        >
           <div className="aspect-square bg-neutral-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={image.url} alt={image.altText} className="h-full w-full object-cover" />
+            <img
+              src={image.url}
+              alt={image.altText}
+              className="h-full w-full object-cover"
+            />
           </div>
           <div className="p-2">
-            <p className="truncate text-xs font-medium text-neutral-900">{image.altText || "Untitled image"}</p>
+            <p className="truncate text-xs font-medium text-neutral-900">
+              {image.altText || "Untitled image"}
+            </p>
             <p className="truncate text-[11px] text-neutral-500">{image.url}</p>
           </div>
         </div>
@@ -100,7 +109,10 @@ function imagePreviewList(images: AdminImage[]) {
   );
 }
 
-function applyProductDraft(value: string, setDraft: (draft: ProductDraft) => void) {
+function applyProductDraft(
+  value: string,
+  setDraft: (draft: ProductDraft) => void,
+) {
   const draft = parseProductDraft(value);
   if (!draft) return;
   setDraft(draft);
@@ -126,7 +138,9 @@ function PhotoDropzone({
   return (
     <div
       className={`rounded-xl border-2 border-dashed p-5 text-sm transition-colors ${
-        dragActive ? "border-rose-500 bg-rose-50" : "border-neutral-300 bg-neutral-50"
+        dragActive
+          ? "border-rose-500 bg-rose-50"
+          : "border-neutral-300 bg-neutral-50"
       } ${disabled ? "opacity-60" : ""}`}
       onDragOver={(event) => {
         event.preventDefault();
@@ -144,7 +158,9 @@ function PhotoDropzone({
       }}
     >
       <p className="font-medium text-neutral-900">{label}</p>
-      <p className="mt-1 text-neutral-600">{helper || "Drag files here or click to select them."}</p>
+      <p className="mt-1 text-neutral-600">
+        {helper || "Drag files here or click to select them."}
+      </p>
       <input
         className="mt-3 block w-full text-sm"
         type="file"
@@ -171,18 +187,20 @@ export default function AdminPage() {
   const [pages, setPages] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
-  const [editingCollectionHandle, setEditingCollectionHandle] = useState<string | null>(null);
+  const [editingCollectionHandle, setEditingCollectionHandle] = useState<
+    string | null
+  >(null);
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
 
   async function loadAll() {
     if (!adminPassword) return;
-    const headers = { 'x-admin-password': adminPassword };
+    const headers = { "x-admin-password": adminPassword };
     try {
       const [pRes, cRes, pgRes, oRes] = await Promise.all([
-        fetch('/api/admin/product', { headers }),
-        fetch('/api/admin/collection', { headers }),
-        fetch('/api/admin/page', { headers }),
-        fetch('/api/admin/order', { headers }),
+        fetch("/api/admin/product", { headers }),
+        fetch("/api/admin/collection", { headers }),
+        fetch("/api/admin/page", { headers }),
+        fetch("/api/admin/order", { headers }),
       ]);
       if (pRes.ok) setProducts(await pRes.json());
       if (cRes.ok) setCollections(await cRes.json());
@@ -194,20 +212,20 @@ export default function AdminPage() {
   }
 
   async function updateOrder(id: string, payload: any) {
-    const res = await fetch('/api/admin/order', {
-      method: 'PATCH',
+    const res = await fetch("/api/admin/order", {
+      method: "PATCH",
       headers: {
-        'Content-Type': 'application/json',
-        'x-admin-password': adminPassword,
+        "Content-Type": "application/json",
+        "x-admin-password": adminPassword,
       },
       body: JSON.stringify({ id, ...payload }),
     });
 
     if (res.ok) {
-      setStatus('order updated');
+      setStatus("order updated");
       await loadAll();
     } else {
-      setStatus('order update failed');
+      setStatus("order update failed");
     }
   }
 
@@ -259,7 +277,9 @@ export default function AdminPage() {
 
       if (!response.ok) {
         const errorBody = await response.text();
-        throw new Error(`Failed to update page ${template.handle}: ${errorBody}`);
+        throw new Error(
+          `Failed to update page ${template.handle}: ${errorBody}`,
+        );
       }
 
       return;
@@ -306,7 +326,9 @@ export default function AdminPage() {
         bodySummary: "Browse all products in one place.",
       });
 
-      const visibleCollections = collections.filter((collection) => !collection.hidden);
+      const visibleCollections = collections.filter(
+        (collection) => !collection.hidden,
+      );
       for (const collection of visibleCollections) {
         await upsertPageByHandle({
           handle: `${collection.handle}`,
@@ -319,7 +341,11 @@ export default function AdminPage() {
       await loadAll();
       setStatus("catalog pages ready");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "failed to create catalog pages");
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "failed to create catalog pages",
+      );
     }
   }
 
@@ -360,20 +386,34 @@ export default function AdminPage() {
       await loadAll();
       setStatus("all pages deleted");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "failed to delete pages");
+      setStatus(
+        error instanceof Error ? error.message : "failed to delete pages",
+      );
     }
   }
 
   return (
     <div className="mx-auto max-w-4xl p-8">
       <h1 className="mb-4 text-2xl font-bold">Admin dashboard</h1>
-      <p className="mb-4">Set an `ADMIN_PASSWORD` in your .env.local to protect these endpoints.</p>
+      <p className="mb-4">
+        Set an `ADMIN_PASSWORD` in your .env.local to protect these endpoints.
+      </p>
 
       <FormField>
         <label className="block mb-1">Admin password</label>
-        <input className="w-full rounded border px-3 py-2" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} />
+        <input
+          className="w-full rounded border px-3 py-2"
+          value={adminPassword}
+          onChange={(e) => setAdminPassword(e.target.value)}
+        />
         <div className="mt-2">
-          <button className="mr-2 rounded bg-gray-200 px-3 py-1" onClick={loadAll} type="button">Load data</button>
+          <button
+            className="mr-2 rounded bg-gray-200 px-3 py-1"
+            onClick={loadAll}
+            type="button"
+          >
+            Load data
+          </button>
         </div>
       </FormField>
 
@@ -399,7 +439,8 @@ export default function AdminPage() {
       <section className="mb-8 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
         <h2 className="mb-2 text-lg font-semibold">Catalog page setup</h2>
         <p className="mb-3 text-sm text-neutral-600">
-          Create one All Products page and one page per visible collection, or remove all existing pages in one click.
+          Create one All Products page and one page per visible collection, or
+          remove all existing pages in one click.
         </p>
         <div className="flex flex-wrap gap-2">
           <button
@@ -421,20 +462,29 @@ export default function AdminPage() {
 
       <section className="mb-8">
         <h2 className="mb-2 text-lg font-semibold">Orders</h2>
-        <p className="mb-3 text-sm text-neutral-600">Orders are created at checkout. Use these buttons after verifying UPI payment manually.</p>
+        <p className="mb-3 text-sm text-neutral-600">
+          Orders are created at checkout. Use these buttons after verifying UPI
+          payment manually.
+        </p>
         {orders.length === 0 ? (
           <p className="text-sm text-neutral-500">No orders loaded</p>
         ) : (
           <ul className="space-y-3">
             {orders.map((order) => (
-              <li key={order.id} className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+              <li
+                key={order.id}
+                className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-medium">{order.id}</p>
                     <p className="text-sm text-neutral-600">
-                      {order.currency_code} {order.total_amount} | status: {order.status} | payment: {order.payment_status}
+                      {order.currency_code} {order.total_amount} | status:{" "}
+                      {order.status} | payment: {order.payment_status}
                     </p>
-                    <p className="text-xs text-neutral-500">{order.created_at}</p>
+                    <p className="text-xs text-neutral-500">
+                      {order.created_at}
+                    </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -442,8 +492,8 @@ export default function AdminPage() {
                       className="rounded bg-emerald-600 px-3 py-1 text-sm text-white"
                       onClick={() =>
                         updateOrder(order.id, {
-                          status: 'paid',
-                          payment_status: 'paid',
+                          status: "paid",
+                          payment_status: "paid",
                         })
                       }
                     >
@@ -454,8 +504,8 @@ export default function AdminPage() {
                       className="rounded bg-amber-500 px-3 py-1 text-sm text-white"
                       onClick={() =>
                         updateOrder(order.id, {
-                          status: 'pending',
-                          payment_status: 'pending',
+                          status: "pending",
+                          payment_status: "pending",
                         })
                       }
                     >
@@ -466,8 +516,8 @@ export default function AdminPage() {
                       className="rounded bg-red-600 px-3 py-1 text-sm text-white"
                       onClick={() =>
                         updateOrder(order.id, {
-                          status: 'cancelled',
-                          payment_status: 'failed',
+                          status: "cancelled",
+                          payment_status: "failed",
                         })
                       }
                     >
@@ -486,22 +536,55 @@ export default function AdminPage() {
       <section className="mt-8">
         <h2 className="mb-2 text-lg font-semibold">Products</h2>
         <div className="mb-4">
-          {products.length === 0 ? <p className="text-sm text-neutral-500">No products loaded</p> : (
+          {products.length === 0 ? (
+            <p className="text-sm text-neutral-500">No products loaded</p>
+          ) : (
             <ul className="space-y-3">
               {products.map((p) => (
-                <li key={p.id} className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+                <li
+                  key={p.id}
+                  className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+                >
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="font-medium">{p.title}</div>
                       <div className="text-sm text-neutral-500">{p.handle}</div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="rounded border border-neutral-300 px-3 py-1" onClick={() => setEditingProductId(editingProductId === p.id ? null : p.id)} type="button">{editingProductId === p.id ? "Close" : "Edit"}</button>
-                      <button className="rounded bg-red-500 px-3 py-1 text-white" onClick={async () => {
-                        if (!confirm('Delete product?')) return;
-                        const res = await fetch('/api/admin/product', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword }, body: JSON.stringify({ id: p.id }) });
-                        if (res.ok) { setStatus('deleted'); loadAll(); } else { setStatus('delete failed'); }
-                      }} type="button">Delete</button>
+                      <button
+                        className="rounded border border-neutral-300 px-3 py-1"
+                        onClick={() =>
+                          setEditingProductId(
+                            editingProductId === p.id ? null : p.id,
+                          )
+                        }
+                        type="button"
+                      >
+                        {editingProductId === p.id ? "Close" : "Edit"}
+                      </button>
+                      <button
+                        className="rounded bg-red-500 px-3 py-1 text-white"
+                        onClick={async () => {
+                          if (!confirm("Delete product?")) return;
+                          const res = await fetch("/api/admin/product", {
+                            method: "DELETE",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "x-admin-password": adminPassword,
+                            },
+                            body: JSON.stringify({ id: p.id }),
+                          });
+                          if (res.ok) {
+                            setStatus("deleted");
+                            loadAll();
+                          } else {
+                            setStatus("delete failed");
+                          }
+                        }}
+                        type="button"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                   {editingProductId === p.id ? (
@@ -511,17 +594,20 @@ export default function AdminPage() {
                         item={p}
                         onCancel={() => setEditingProductId(null)}
                         onSave={async (payload) => {
-                          const res = await fetch('/api/admin/product', {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+                          const res = await fetch("/api/admin/product", {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "x-admin-password": adminPassword,
+                            },
                             body: JSON.stringify({ id: p.id, ...payload }),
                           });
                           if (res.ok) {
-                            setStatus('updated');
+                            setStatus("updated");
                             setEditingProductId(null);
                             await loadAll();
                           } else {
-                            setStatus('update failed');
+                            setStatus("update failed");
                           }
                         }}
                       />
@@ -535,22 +621,59 @@ export default function AdminPage() {
 
         <h2 className="mb-2 text-lg font-semibold">Categories</h2>
         <div className="mb-4">
-          {collections.length === 0 ? <p className="text-sm text-neutral-500">No collections loaded</p> : (
+          {collections.length === 0 ? (
+            <p className="text-sm text-neutral-500">No collections loaded</p>
+          ) : (
             <ul className="space-y-3">
               {collections.map((c) => (
-                <li key={c.handle} className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+                <li
+                  key={c.handle}
+                  className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+                >
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="font-medium">{c.title}</div>
                       <div className="text-sm text-neutral-500">{c.handle}</div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="rounded border border-neutral-300 px-3 py-1" onClick={() => setEditingCollectionHandle(editingCollectionHandle === c.handle ? null : c.handle)} type="button">{editingCollectionHandle === c.handle ? "Close" : "Edit"}</button>
-                      <button className="rounded bg-red-500 px-3 py-1 text-white" onClick={async () => {
-                        if (!confirm('Delete collection?')) return;
-                        const res = await fetch('/api/admin/collection', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword }, body: JSON.stringify({ handle: c.handle }) });
-                        if (res.ok) { setStatus('deleted'); loadAll(); } else { setStatus('delete failed'); }
-                      }} type="button">Delete</button>
+                      <button
+                        className="rounded border border-neutral-300 px-3 py-1"
+                        onClick={() =>
+                          setEditingCollectionHandle(
+                            editingCollectionHandle === c.handle
+                              ? null
+                              : c.handle,
+                          )
+                        }
+                        type="button"
+                      >
+                        {editingCollectionHandle === c.handle
+                          ? "Close"
+                          : "Edit"}
+                      </button>
+                      <button
+                        className="rounded bg-red-500 px-3 py-1 text-white"
+                        onClick={async () => {
+                          if (!confirm("Delete collection?")) return;
+                          const res = await fetch("/api/admin/collection", {
+                            method: "DELETE",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "x-admin-password": adminPassword,
+                            },
+                            body: JSON.stringify({ handle: c.handle }),
+                          });
+                          if (res.ok) {
+                            setStatus("deleted");
+                            loadAll();
+                          } else {
+                            setStatus("delete failed");
+                          }
+                        }}
+                        type="button"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                   {editingCollectionHandle === c.handle ? (
@@ -559,17 +682,23 @@ export default function AdminPage() {
                         item={c}
                         onCancel={() => setEditingCollectionHandle(null)}
                         onSave={async (payload) => {
-                          const res = await fetch('/api/admin/collection', {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
-                            body: JSON.stringify({ handle: c.handle, ...payload }),
+                          const res = await fetch("/api/admin/collection", {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "x-admin-password": adminPassword,
+                            },
+                            body: JSON.stringify({
+                              handle: c.handle,
+                              ...payload,
+                            }),
                           });
                           if (res.ok) {
-                            setStatus('updated');
+                            setStatus("updated");
                             setEditingCollectionHandle(null);
                             await loadAll();
                           } else {
-                            setStatus('update failed');
+                            setStatus("update failed");
                           }
                         }}
                       />
@@ -583,22 +712,57 @@ export default function AdminPage() {
 
         <h2 className="mb-2 text-lg font-semibold">Pages</h2>
         <div className="mb-4">
-          {pages.length === 0 ? <p className="text-sm text-neutral-500">No pages loaded</p> : (
+          {pages.length === 0 ? (
+            <p className="text-sm text-neutral-500">No pages loaded</p>
+          ) : (
             <ul className="space-y-3">
               {pages.map((pg) => (
-                <li key={pg.id} className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+                <li
+                  key={pg.id}
+                  className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+                >
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="font-medium">{pg.title}</div>
-                      <div className="text-sm text-neutral-500">{pg.handle}</div>
+                      <div className="text-sm text-neutral-500">
+                        {pg.handle}
+                      </div>
                     </div>
                     <div className="flex gap-2">
-                      <button className="rounded border border-neutral-300 px-3 py-1" onClick={() => setEditingPageId(editingPageId === pg.id ? null : pg.id)} type="button">{editingPageId === pg.id ? "Close" : "Edit"}</button>
-                      <button className="rounded bg-red-500 px-3 py-1 text-white" onClick={async () => {
-                        if (!confirm('Delete page?')) return;
-                        const res = await fetch('/api/admin/page', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword }, body: JSON.stringify({ id: pg.id }) });
-                        if (res.ok) { setStatus('deleted'); loadAll(); } else { setStatus('delete failed'); }
-                      }} type="button">Delete</button>
+                      <button
+                        className="rounded border border-neutral-300 px-3 py-1"
+                        onClick={() =>
+                          setEditingPageId(
+                            editingPageId === pg.id ? null : pg.id,
+                          )
+                        }
+                        type="button"
+                      >
+                        {editingPageId === pg.id ? "Close" : "Edit"}
+                      </button>
+                      <button
+                        className="rounded bg-red-500 px-3 py-1 text-white"
+                        onClick={async () => {
+                          if (!confirm("Delete page?")) return;
+                          const res = await fetch("/api/admin/page", {
+                            method: "DELETE",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "x-admin-password": adminPassword,
+                            },
+                            body: JSON.stringify({ id: pg.id }),
+                          });
+                          if (res.ok) {
+                            setStatus("deleted");
+                            loadAll();
+                          } else {
+                            setStatus("delete failed");
+                          }
+                        }}
+                        type="button"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                   {editingPageId === pg.id ? (
@@ -607,17 +771,20 @@ export default function AdminPage() {
                         item={pg}
                         onCancel={() => setEditingPageId(null)}
                         onSave={async (payload) => {
-                          const res = await fetch('/api/admin/page', {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+                          const res = await fetch("/api/admin/page", {
+                            method: "PATCH",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "x-admin-password": adminPassword,
+                            },
                             body: JSON.stringify({ id: pg.id, ...payload }),
                           });
                           if (res.ok) {
-                            setStatus('updated');
+                            setStatus("updated");
                             setEditingPageId(null);
                             await loadAll();
                           } else {
-                            setStatus('update failed');
+                            setStatus("update failed");
                           }
                         }}
                       />
@@ -670,7 +837,9 @@ function ProductForm({
       onSubmit={(e) => {
         e.preventDefault();
         const categoryList = Array.from(
-          new Set([categoryHandle, ...csvToList(collectionHandles)].filter(Boolean)),
+          new Set(
+            [categoryHandle, ...csvToList(collectionHandles)].filter(Boolean),
+          ),
         );
 
         onSubmit({
@@ -685,15 +854,28 @@ function ProductForm({
     >
       <div className="mb-2">
         <label className="block mb-1">Handle</label>
-        <input className="w-full rounded border px-3 py-2" value={handle} onChange={(e) => setHandle(e.target.value)} />
+        <input
+          className="w-full rounded border px-3 py-2"
+          value={handle}
+          onChange={(e) => setHandle(e.target.value)}
+        />
       </div>
       <div className="mb-2">
         <label className="block mb-1">Title</label>
-        <input className="w-full rounded border px-3 py-2" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input
+          className="w-full rounded border px-3 py-2"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
       </div>
       <div className="mb-2">
         <label className="block mb-1">Description</label>
-        <textarea className="w-full rounded border px-3 py-2" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <textarea
+          className="w-full rounded border px-3 py-2"
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
       </div>
       <div className="mb-2">
         <label className="block mb-1">Primary category</label>
@@ -737,7 +919,10 @@ function ProductForm({
               setImages((current) => appendImages(current, uploaded));
               setFeaturedImage((current) => {
                 try {
-                  const parsed = current.trim() && current.trim() !== "null" ? JSON.parse(current) : null;
+                  const parsed =
+                    current.trim() && current.trim() !== "null"
+                      ? JSON.parse(current)
+                      : null;
                   if (parsed) return current;
                 } catch {
                   // ignore and fall through to first uploaded image
@@ -745,7 +930,9 @@ function ProductForm({
                 return JSON.stringify(uploaded[0] ?? null, null, 2);
               });
             } catch (error) {
-              setUploadError(error instanceof Error ? error.message : "Upload failed");
+              setUploadError(
+                error instanceof Error ? error.message : "Upload failed",
+              );
             } finally {
               setUploading(false);
             }
@@ -754,21 +941,39 @@ function ProductForm({
       </div>
       <div className="mb-2">
         <label className="block mb-1">Featured image (JSON)</label>
-        <textarea className="w-full rounded border px-3 py-2 font-mono text-sm" rows={4} value={featuredImage} onChange={(e) => setFeaturedImage(e.target.value)} />
+        <textarea
+          className="w-full rounded border px-3 py-2 font-mono text-sm"
+          rows={4}
+          value={featuredImage}
+          onChange={(e) => setFeaturedImage(e.target.value)}
+        />
       </div>
       <div className="mb-2">
         <label className="block mb-1">Images (JSON)</label>
-        <textarea className="w-full rounded border px-3 py-2 font-mono text-sm" rows={6} value={images} onChange={(e) => setImages(e.target.value)} />
+        <textarea
+          className="w-full rounded border px-3 py-2 font-mono text-sm"
+          rows={6}
+          value={images}
+          onChange={(e) => setImages(e.target.value)}
+        />
       </div>
       {currentImages.length > 0 ? (
         <div className="mb-3">
-          <p className="mb-2 text-sm font-medium text-neutral-700">Image preview</p>
+          <p className="mb-2 text-sm font-medium text-neutral-700">
+            Image preview
+          </p>
           {imagePreviewList(currentImages)}
         </div>
       ) : null}
       <div className="mb-2">
         <label className="block mb-1">Product JSON import</label>
-        <textarea className="w-full rounded border px-3 py-2 font-mono text-sm" rows={8} value={productJson} onChange={(e) => setProductJson(e.target.value)} placeholder='{"title":"...","handle":"...","images":[...]}' />
+        <textarea
+          className="w-full rounded border px-3 py-2 font-mono text-sm"
+          rows={8}
+          value={productJson}
+          onChange={(e) => setProductJson(e.target.value)}
+          placeholder='{"title":"...","handle":"...","images":[...]}'
+        />
         <div className="mt-2 flex gap-2">
           <button
             type="button"
@@ -779,16 +984,28 @@ function ProductForm({
                 applyProductDraft(productJson, (draft) => {
                   if (typeof draft.title === "string") setTitle(draft.title);
                   if (typeof draft.handle === "string") setHandle(draft.handle);
-                  if (typeof draft.description === "string" || draft.description === null) setDescription(draft.description ?? "");
+                  if (
+                    typeof draft.description === "string" ||
+                    draft.description === null
+                  )
+                    setDescription(draft.description ?? "");
                   if (Array.isArray(draft.collection_handles)) {
                     setCategoryHandle(draft.collection_handles[0] ?? "");
                     setCollectionHandles(draft.collection_handles.join(", "));
                   }
-                  if (typeof draft.featured_image !== "undefined") setFeaturedImage(JSON.stringify(draft.featured_image ?? null, null, 2));
-                  if (typeof draft.images !== "undefined") setImages(JSON.stringify(draft.images ?? [], null, 2));
+                  if (typeof draft.featured_image !== "undefined")
+                    setFeaturedImage(
+                      JSON.stringify(draft.featured_image ?? null, null, 2),
+                    );
+                  if (typeof draft.images !== "undefined")
+                    setImages(JSON.stringify(draft.images ?? [], null, 2));
                 });
               } catch (error) {
-                setUploadError(error instanceof Error ? error.message : "Invalid product JSON");
+                setUploadError(
+                  error instanceof Error
+                    ? error.message
+                    : "Invalid product JSON",
+                );
               }
             }}
           >
@@ -804,9 +1021,17 @@ function ProductForm({
                   handle,
                   description,
                   collection_handles: Array.from(
-                    new Set([categoryHandle, ...csvToList(collectionHandles)].filter(Boolean)),
+                    new Set(
+                      [categoryHandle, ...csvToList(collectionHandles)].filter(
+                        Boolean,
+                      ),
+                    ),
                   ),
-                  featured_image: parseJsonOr(featuredImage, null, "featured image"),
+                  featured_image: parseJsonOr(
+                    featuredImage,
+                    null,
+                    "featured image",
+                  ),
                   images: parseJsonOr(images, [], "images"),
                 }),
               );
@@ -816,27 +1041,65 @@ function ProductForm({
           </button>
         </div>
       </div>
-      {uploadError ? <p className="mb-2 text-sm text-red-600">{uploadError}</p> : null}
-      {uploading ? <p className="mb-2 text-sm text-neutral-500">Uploading...</p> : null}
-      <button className="rounded bg-rose-500 px-4 py-2 text-white">Create product</button>
+      {uploadError ? (
+        <p className="mb-2 text-sm text-red-600">{uploadError}</p>
+      ) : null}
+      {uploading ? (
+        <p className="mb-2 text-sm text-neutral-500">Uploading...</p>
+      ) : null}
+      <button className="rounded bg-rose-500 px-4 py-2 text-white">
+        Create product
+      </button>
     </form>
   );
 }
 
-function ProductEditor({ adminPassword, item, onSave, onCancel }: { adminPassword: string; item: any; onSave: (d: any) => Promise<void>; onCancel: () => void }) {
+function ProductEditor({
+  adminPassword,
+  item,
+  onSave,
+  onCancel,
+}: {
+  adminPassword: string;
+  item: any;
+  onSave: (d: any) => Promise<void>;
+  onCancel: () => void;
+}) {
   const [title, setTitle] = useState(item.title ?? "");
   const [handle, setHandle] = useState(item.handle ?? "");
   const [description, setDescription] = useState(item.description ?? "");
-  const [availableForSale, setAvailableForSale] = useState(Boolean(item.available_for_sale ?? true));
-  const [options, setOptions] = useState(JSON.stringify(item.options ?? [], null, 2));
-  const [priceRange, setPriceRange] = useState(JSON.stringify(item.price_range ?? null, null, 2));
-  const [variants, setVariants] = useState(JSON.stringify(item.variants ?? [], null, 2));
-  const [featuredImage, setFeaturedImage] = useState(JSON.stringify(item.featured_image ?? null, null, 2));
-  const [images, setImages] = useState(JSON.stringify(item.images ?? [], null, 2));
+  const [availableForSale, setAvailableForSale] = useState(
+    Boolean(item.available_for_sale ?? true),
+  );
+  const [options, setOptions] = useState(
+    JSON.stringify(item.options ?? [], null, 2),
+  );
+  const [priceRange, setPriceRange] = useState(
+    JSON.stringify(item.price_range ?? null, null, 2),
+  );
+  const [variants, setVariants] = useState(
+    JSON.stringify(item.variants ?? [], null, 2),
+  );
+  const [featuredImage, setFeaturedImage] = useState(
+    JSON.stringify(item.featured_image ?? null, null, 2),
+  );
+  const [images, setImages] = useState(
+    JSON.stringify(item.images ?? [], null, 2),
+  );
   const [seo, setSeo] = useState(JSON.stringify(item.seo ?? null, null, 2));
-  const [tags, setTags] = useState(Array.isArray(item.tags) ? item.tags.join(", ") : "");
-  const [collectionHandles, setCollectionHandles] = useState(Array.isArray(item.collection_handles) ? item.collection_handles.join(", ") : "");
-  const [recommendationIds, setRecommendationIds] = useState(Array.isArray(item.recommendation_ids) ? item.recommendation_ids.join(", ") : "");
+  const [tags, setTags] = useState(
+    Array.isArray(item.tags) ? item.tags.join(", ") : "",
+  );
+  const [collectionHandles, setCollectionHandles] = useState(
+    Array.isArray(item.collection_handles)
+      ? item.collection_handles.join(", ")
+      : "",
+  );
+  const [recommendationIds, setRecommendationIds] = useState(
+    Array.isArray(item.recommendation_ids)
+      ? item.recommendation_ids.join(", ")
+      : "",
+  );
   const [salesRank, setSalesRank] = useState(item.sales_rank ?? "");
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -853,7 +1116,9 @@ function ProductEditor({ adminPassword, item, onSave, onCancel }: { adminPasswor
 
   const currentFeaturedImage = (() => {
     try {
-      return featuredImage.trim() && featuredImage.trim() !== "null" ? JSON.parse(featuredImage) : null;
+      return featuredImage.trim() && featuredImage.trim() !== "null"
+        ? JSON.parse(featuredImage)
+        : null;
     } catch {
       return null;
     }
@@ -883,7 +1148,9 @@ function ProductEditor({ adminPassword, item, onSave, onCancel }: { adminPasswor
             sales_rank: salesRank === "" ? null : Number(salesRank),
           });
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Failed to save product");
+          setError(
+            err instanceof Error ? err.message : "Failed to save product",
+          );
         }
       }}
     >
@@ -891,39 +1158,94 @@ function ProductEditor({ adminPassword, item, onSave, onCancel }: { adminPasswor
         <TextField label="Title" value={title} onChange={setTitle} />
         <TextField label="Handle" value={handle} onChange={setHandle} />
       </div>
-      <TextAreaField label="Description" value={description} onChange={setDescription} rows={4} />
+      <TextAreaField
+        label="Description"
+        value={description}
+        onChange={setDescription}
+        rows={4}
+      />
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={availableForSale} onChange={(e) => setAvailableForSale(e.target.checked)} />
+        <input
+          type="checkbox"
+          checked={availableForSale}
+          onChange={(e) => setAvailableForSale(e.target.checked)}
+        />
         Available for sale
       </label>
       <div className="grid gap-3 md:grid-cols-2">
-        <TextAreaField label="Options (JSON)" value={options} onChange={setOptions} rows={4} />
-        <TextAreaField label="Price range (JSON)" value={priceRange} onChange={setPriceRange} rows={4} />
-        <TextAreaField label="Variants (JSON)" value={variants} onChange={setVariants} rows={6} />
-        <TextAreaField label="Featured image (JSON)" value={featuredImage} onChange={setFeaturedImage} rows={4} />
-        <TextAreaField label="Images (JSON)" value={images} onChange={setImages} rows={6} />
-        <TextAreaField label="SEO (JSON)" value={seo} onChange={setSeo} rows={4} />
+        <TextAreaField
+          label="Options (JSON)"
+          value={options}
+          onChange={setOptions}
+          rows={4}
+        />
+        <TextAreaField
+          label="Price range (JSON)"
+          value={priceRange}
+          onChange={setPriceRange}
+          rows={4}
+        />
+        <TextAreaField
+          label="Variants (JSON)"
+          value={variants}
+          onChange={setVariants}
+          rows={6}
+        />
+        <TextAreaField
+          label="Featured image (JSON)"
+          value={featuredImage}
+          onChange={setFeaturedImage}
+          rows={4}
+        />
+        <TextAreaField
+          label="Images (JSON)"
+          value={images}
+          onChange={setImages}
+          rows={6}
+        />
+        <TextAreaField
+          label="SEO (JSON)"
+          value={seo}
+          onChange={setSeo}
+          rows={4}
+        />
       </div>
       {currentFeaturedImage?.url ? (
         <div className="grid gap-3 md:grid-cols-2">
           <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
             <div className="aspect-square bg-neutral-100">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={currentFeaturedImage.url} alt={currentFeaturedImage.altText || title} className="h-full w-full object-cover" />
+              <img
+                src={currentFeaturedImage.url}
+                alt={currentFeaturedImage.altText || title}
+                className="h-full w-full object-cover"
+              />
             </div>
-            <div className="p-2 text-xs text-neutral-500">Featured image preview</div>
+            <div className="p-2 text-xs text-neutral-500">
+              Featured image preview
+            </div>
           </div>
           {currentImages.length > 0 ? (
             <div>
-              <p className="mb-2 text-sm font-medium text-neutral-700">Image previews</p>
+              <p className="mb-2 text-sm font-medium text-neutral-700">
+                Image previews
+              </p>
               {imagePreviewList(currentImages)}
             </div>
           ) : null}
         </div>
       ) : null}
       <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-        <label className="mb-1 block text-sm font-medium text-neutral-700">Product JSON import/export</label>
-        <textarea className="w-full rounded border px-3 py-2 font-mono text-sm" rows={8} value={productJson} onChange={(e) => setProductJson(e.target.value)} placeholder='{"title":"...","handle":"...","images":[...]}' />
+        <label className="mb-1 block text-sm font-medium text-neutral-700">
+          Product JSON import/export
+        </label>
+        <textarea
+          className="w-full rounded border px-3 py-2 font-mono text-sm"
+          rows={8}
+          value={productJson}
+          onChange={(e) => setProductJson(e.target.value)}
+          placeholder='{"title":"...","handle":"...","images":[...]}'
+        />
         <div className="mt-2 flex gap-2">
           <button
             type="button"
@@ -934,21 +1256,46 @@ function ProductEditor({ adminPassword, item, onSave, onCancel }: { adminPasswor
                 applyProductDraft(productJson, (draft) => {
                   if (typeof draft.title === "string") setTitle(draft.title);
                   if (typeof draft.handle === "string") setHandle(draft.handle);
-                  if (typeof draft.description === "string" || draft.description === null) setDescription(draft.description ?? "");
-                  if (typeof draft.available_for_sale === "boolean") setAvailableForSale(draft.available_for_sale);
-                  if (typeof draft.options !== "undefined") setOptions(JSON.stringify(draft.options ?? [], null, 2));
-                  if (typeof draft.price_range !== "undefined") setPriceRange(JSON.stringify(draft.price_range ?? null, null, 2));
-                  if (typeof draft.variants !== "undefined") setVariants(JSON.stringify(draft.variants ?? [], null, 2));
-                  if (typeof draft.featured_image !== "undefined") setFeaturedImage(JSON.stringify(draft.featured_image ?? null, null, 2));
-                  if (typeof draft.images !== "undefined") setImages(JSON.stringify(draft.images ?? [], null, 2));
-                  if (typeof draft.seo !== "undefined") setSeo(JSON.stringify(draft.seo ?? null, null, 2));
+                  if (
+                    typeof draft.description === "string" ||
+                    draft.description === null
+                  )
+                    setDescription(draft.description ?? "");
+                  if (typeof draft.available_for_sale === "boolean")
+                    setAvailableForSale(draft.available_for_sale);
+                  if (typeof draft.options !== "undefined")
+                    setOptions(JSON.stringify(draft.options ?? [], null, 2));
+                  if (typeof draft.price_range !== "undefined")
+                    setPriceRange(
+                      JSON.stringify(draft.price_range ?? null, null, 2),
+                    );
+                  if (typeof draft.variants !== "undefined")
+                    setVariants(JSON.stringify(draft.variants ?? [], null, 2));
+                  if (typeof draft.featured_image !== "undefined")
+                    setFeaturedImage(
+                      JSON.stringify(draft.featured_image ?? null, null, 2),
+                    );
+                  if (typeof draft.images !== "undefined")
+                    setImages(JSON.stringify(draft.images ?? [], null, 2));
+                  if (typeof draft.seo !== "undefined")
+                    setSeo(JSON.stringify(draft.seo ?? null, null, 2));
                   if (Array.isArray(draft.tags)) setTags(draft.tags.join(", "));
-                  if (Array.isArray(draft.collection_handles)) setCollectionHandles(draft.collection_handles.join(", "));
-                  if (Array.isArray(draft.recommendation_ids)) setRecommendationIds(draft.recommendation_ids.join(", "));
-                  if (typeof draft.sales_rank !== "undefined" && draft.sales_rank !== null) setSalesRank(String(draft.sales_rank));
+                  if (Array.isArray(draft.collection_handles))
+                    setCollectionHandles(draft.collection_handles.join(", "));
+                  if (Array.isArray(draft.recommendation_ids))
+                    setRecommendationIds(draft.recommendation_ids.join(", "));
+                  if (
+                    typeof draft.sales_rank !== "undefined" &&
+                    draft.sales_rank !== null
+                  )
+                    setSalesRank(String(draft.sales_rank));
                 });
               } catch (error) {
-                setUploadError(error instanceof Error ? error.message : "Invalid product JSON");
+                setUploadError(
+                  error instanceof Error
+                    ? error.message
+                    : "Invalid product JSON",
+                );
               }
             }}
           >
@@ -967,7 +1314,11 @@ function ProductEditor({ adminPassword, item, onSave, onCancel }: { adminPasswor
                   options: parseJsonOr(options, [], "options"),
                   price_range: parseJsonOr(priceRange, null, "price range"),
                   variants: parseJsonOr(variants, [], "variants"),
-                  featured_image: parseJsonOr(featuredImage, null, "featured image"),
+                  featured_image: parseJsonOr(
+                    featuredImage,
+                    null,
+                    "featured image",
+                  ),
                   images: parseJsonOr(images, [], "images"),
                   seo: parseJsonOr(seo, null, "seo"),
                   tags: csvToList(tags),
@@ -999,7 +1350,10 @@ function ProductEditor({ adminPassword, item, onSave, onCancel }: { adminPasswor
             setImages((current) => appendImages(current, uploaded));
             setFeaturedImage((current) => {
               try {
-                const currentValue = current.trim() && current.trim() !== "null" ? JSON.parse(current) : null;
+                const currentValue =
+                  current.trim() && current.trim() !== "null"
+                    ? JSON.parse(current)
+                    : null;
                 if (currentValue) return current;
                 return JSON.stringify(uploaded[0], null, 2);
               } catch {
@@ -1007,30 +1361,72 @@ function ProductEditor({ adminPassword, item, onSave, onCancel }: { adminPasswor
               }
             });
           } catch (error) {
-            setUploadError(error instanceof Error ? error.message : "Upload failed");
+            setUploadError(
+              error instanceof Error ? error.message : "Upload failed",
+            );
           } finally {
             setUploading(false);
           }
         }}
       />
       <div className="grid gap-3 md:grid-cols-2">
-        <TextField label="Tags (comma separated)" value={tags} onChange={setTags} />
-        <TextField label="Collection handles (comma separated)" value={collectionHandles} onChange={setCollectionHandles} />
-        <TextField label="Recommendation IDs (comma separated)" value={recommendationIds} onChange={setRecommendationIds} />
-        <TextField label="Sales rank" value={String(salesRank)} onChange={setSalesRank} type="number" />
+        <TextField
+          label="Tags (comma separated)"
+          value={tags}
+          onChange={setTags}
+        />
+        <TextField
+          label="Collection handles (comma separated)"
+          value={collectionHandles}
+          onChange={setCollectionHandles}
+        />
+        <TextField
+          label="Recommendation IDs (comma separated)"
+          value={recommendationIds}
+          onChange={setRecommendationIds}
+        />
+        <TextField
+          label="Sales rank"
+          value={String(salesRank)}
+          onChange={setSalesRank}
+          type="number"
+        />
       </div>
-      {uploadError ? <p className="text-sm text-red-600">{uploadError}</p> : null}
-      {uploading ? <p className="text-sm text-neutral-500">Uploading...</p> : null}
+      {uploadError ? (
+        <p className="text-sm text-red-600">{uploadError}</p>
+      ) : null}
+      {uploading ? (
+        <p className="text-sm text-neutral-500">Uploading...</p>
+      ) : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <div className="flex gap-2">
-        <button className="rounded bg-rose-500 px-4 py-2 text-white" type="submit">Save product</button>
-        <button className="rounded border border-neutral-300 px-4 py-2" type="button" onClick={onCancel}>Cancel</button>
+        <button
+          className="rounded bg-rose-500 px-4 py-2 text-white"
+          type="submit"
+        >
+          Save product
+        </button>
+        <button
+          className="rounded border border-neutral-300 px-4 py-2"
+          type="button"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
       </div>
     </form>
   );
 }
 
-function CollectionEditor({ item, onSave, onCancel }: { item: any; onSave: (d: any) => Promise<void>; onCancel: () => void }) {
+function CollectionEditor({
+  item,
+  onSave,
+  onCancel,
+}: {
+  item: any;
+  onSave: (d: any) => Promise<void>;
+  onCancel: () => void;
+}) {
   const [title, setTitle] = useState(item.title ?? "");
   const [handle, setHandle] = useState(item.handle ?? "");
   const [description, setDescription] = useState(item.description ?? "");
@@ -1053,7 +1449,9 @@ function CollectionEditor({ item, onSave, onCancel }: { item: any; onSave: (d: a
             hidden,
           });
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Failed to save collection");
+          setError(
+            err instanceof Error ? err.message : "Failed to save collection",
+          );
         }
       }}
     >
@@ -1061,26 +1459,61 @@ function CollectionEditor({ item, onSave, onCancel }: { item: any; onSave: (d: a
         <TextField label="Title" value={title} onChange={setTitle} />
         <TextField label="Handle" value={handle} onChange={setHandle} />
       </div>
-      <TextAreaField label="Description" value={description} onChange={setDescription} rows={4} />
-      <TextAreaField label="SEO (JSON)" value={seo} onChange={setSeo} rows={4} />
+      <TextAreaField
+        label="Description"
+        value={description}
+        onChange={setDescription}
+        rows={4}
+      />
+      <TextAreaField
+        label="SEO (JSON)"
+        value={seo}
+        onChange={setSeo}
+        rows={4}
+      />
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} />
+        <input
+          type="checkbox"
+          checked={hidden}
+          onChange={(e) => setHidden(e.target.checked)}
+        />
         Hidden
       </label>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <div className="flex gap-2">
-        <button className="rounded bg-rose-500 px-4 py-2 text-white" type="submit">Save collection</button>
-        <button className="rounded border border-neutral-300 px-4 py-2" type="button" onClick={onCancel}>Cancel</button>
+        <button
+          className="rounded bg-rose-500 px-4 py-2 text-white"
+          type="submit"
+        >
+          Save collection
+        </button>
+        <button
+          className="rounded border border-neutral-300 px-4 py-2"
+          type="button"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
       </div>
     </form>
   );
 }
 
-function PageEditor({ item, onSave, onCancel }: { item: any; onSave: (d: any) => Promise<void>; onCancel: () => void }) {
+function PageEditor({
+  item,
+  onSave,
+  onCancel,
+}: {
+  item: any;
+  onSave: (d: any) => Promise<void>;
+  onCancel: () => void;
+}) {
   const [title, setTitle] = useState(item.title ?? "");
   const [handle, setHandle] = useState(item.handle ?? "");
   const [body, setBody] = useState(item.body ?? "");
-  const [bodySummary, setBodySummary] = useState(item.body_summary ?? item.bodySummary ?? "");
+  const [bodySummary, setBodySummary] = useState(
+    item.body_summary ?? item.bodySummary ?? "",
+  );
   const [seo, setSeo] = useState(JSON.stringify(item.seo ?? null, null, 2));
   const [error, setError] = useState<string | null>(null);
 
@@ -1107,32 +1540,88 @@ function PageEditor({ item, onSave, onCancel }: { item: any; onSave: (d: any) =>
         <TextField label="Title" value={title} onChange={setTitle} />
         <TextField label="Handle" value={handle} onChange={setHandle} />
       </div>
-      <TextAreaField label="Body (HTML)" value={body} onChange={setBody} rows={6} />
-      <TextAreaField label="Body summary" value={bodySummary} onChange={setBodySummary} rows={3} />
-      <TextAreaField label="SEO (JSON)" value={seo} onChange={setSeo} rows={4} />
+      <TextAreaField
+        label="Body (HTML)"
+        value={body}
+        onChange={setBody}
+        rows={6}
+      />
+      <TextAreaField
+        label="Body summary"
+        value={bodySummary}
+        onChange={setBodySummary}
+        rows={3}
+      />
+      <TextAreaField
+        label="SEO (JSON)"
+        value={seo}
+        onChange={setSeo}
+        rows={4}
+      />
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <div className="flex gap-2">
-        <button className="rounded bg-rose-500 px-4 py-2 text-white" type="submit">Save page</button>
-        <button className="rounded border border-neutral-300 px-4 py-2" type="button" onClick={onCancel}>Cancel</button>
+        <button
+          className="rounded bg-rose-500 px-4 py-2 text-white"
+          type="submit"
+        >
+          Save page
+        </button>
+        <button
+          className="rounded border border-neutral-300 px-4 py-2"
+          type="button"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
       </div>
     </form>
   );
 }
 
-function TextField({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: string }) {
+function TextField({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
   return (
     <label className="block text-sm">
       <span className="mb-1 block font-medium text-neutral-700">{label}</span>
-      <input className="w-full rounded border border-neutral-300 px-3 py-2" type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+      <input
+        className="w-full rounded border border-neutral-300 px-3 py-2"
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </label>
   );
 }
 
-function TextAreaField({ label, value, onChange, rows = 4 }: { label: string; value: string; onChange: (value: string) => void; rows?: number }) {
+function TextAreaField({
+  label,
+  value,
+  onChange,
+  rows = 4,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  rows?: number;
+}) {
   return (
     <label className="block text-sm">
       <span className="mb-1 block font-medium text-neutral-700">{label}</span>
-      <textarea className="w-full rounded border border-neutral-300 px-3 py-2 font-mono text-sm" rows={rows} value={value} onChange={(e) => onChange(e.target.value)} />
+      <textarea
+        className="w-full rounded border border-neutral-300 px-3 py-2 font-mono text-sm"
+        rows={rows}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </label>
   );
 }
@@ -1167,17 +1656,32 @@ function CollectionForm({ onSubmit }: { onSubmit: (d: any) => void }) {
     >
       <div className="mb-2">
         <label className="block mb-1">Handle</label>
-        <input className="w-full rounded border px-3 py-2" value={handle} onChange={(e) => setHandle(e.target.value)} />
+        <input
+          className="w-full rounded border px-3 py-2"
+          value={handle}
+          onChange={(e) => setHandle(e.target.value)}
+        />
       </div>
       <div className="mb-2">
         <label className="block mb-1">Title</label>
-        <input className="w-full rounded border px-3 py-2" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input
+          className="w-full rounded border px-3 py-2"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
       </div>
       <div className="mb-2">
         <label className="block mb-1">Description</label>
-        <textarea className="w-full rounded border px-3 py-2" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <textarea
+          className="w-full rounded border px-3 py-2"
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
       </div>
-      <button className="rounded bg-rose-500 px-4 py-2 text-white">Create collection</button>
+      <button className="rounded bg-rose-500 px-4 py-2 text-white">
+        Create collection
+      </button>
     </form>
   );
 }
@@ -1196,17 +1700,32 @@ function PageForm({ onSubmit }: { onSubmit: (d: any) => void }) {
     >
       <div className="mb-2">
         <label className="block mb-1">Handle</label>
-        <input className="w-full rounded border px-3 py-2" value={handle} onChange={(e) => setHandle(e.target.value)} />
+        <input
+          className="w-full rounded border px-3 py-2"
+          value={handle}
+          onChange={(e) => setHandle(e.target.value)}
+        />
       </div>
       <div className="mb-2">
         <label className="block mb-1">Title</label>
-        <input className="w-full rounded border px-3 py-2" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input
+          className="w-full rounded border px-3 py-2"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
       </div>
       <div className="mb-2">
         <label className="block mb-1">Body (HTML)</label>
-        <textarea className="w-full rounded border px-3 py-2" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
+        <textarea
+          className="w-full rounded border px-3 py-2"
+          rows={6}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+        />
       </div>
-      <button className="rounded bg-rose-500 px-4 py-2 text-white">Create page</button>
+      <button className="rounded bg-rose-500 px-4 py-2 text-white">
+        Create page
+      </button>
     </form>
   );
 }

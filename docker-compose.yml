@@ -1,0 +1,28 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - ESTIMATOR_API_URL=http://estimator:8001
+    env_file:
+      - .env.local
+    depends_on:
+      - estimator
+    restart: unless-stopped
+
+  estimator:
+    build:
+      context: ./tools/estimator
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    env_file:
+      - ./tools/estimator/.env
+    restart: unless-stopped
+# Optional: Add an ollama service here if you want to run Ollama inside Docker
+# but beware of GPU passthrough complications on Windows.

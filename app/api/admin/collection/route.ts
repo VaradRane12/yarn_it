@@ -1,11 +1,11 @@
-import { TAGS } from 'lib/constants';
-import { sanitizeHtml } from 'lib/sanitize-html';
-import { revalidateTag } from 'next/cache';
-import { NextResponse } from 'next/server';
+import { TAGS } from "lib/constants";
+import { sanitizeHtml } from "lib/sanitize-html";
+import { revalidateTag } from "next/cache";
+import { NextResponse } from "next/server";
 
 const guard = (request: Request) => {
   const adminPassword = process.env.ADMIN_PASSWORD;
-  const header = request.headers.get('x-admin-password');
+  const header = request.headers.get("x-admin-password");
   if (!adminPassword || header !== adminPassword) {
     return false;
   }
@@ -19,29 +19,39 @@ const getSupabaseEnv = () => ({
 
 function safeRevalidate(tag: string) {
   try {
-    revalidateTag(tag, 'seconds');
+    revalidateTag(tag, "seconds");
   } catch {
     // Ignore cache invalidation errors so writes still complete.
   }
 }
 
 export async function GET(request: Request) {
-  if (!guard(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!guard(request))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { supabaseUrl, supabaseKey } = getSupabaseEnv();
-  if (!supabaseUrl || !supabaseKey) return NextResponse.json([], { status: 200 });
+  if (!supabaseUrl || !supabaseKey)
+    return NextResponse.json([], { status: 200 });
 
-  const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/collections?select=*` , {
-    headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` },
-    cache: 'no-store',
-  });
+  const res = await fetch(
+    `${supabaseUrl.replace(/\/$/, "")}/rest/v1/collections?select=*`,
+    {
+      headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` },
+      cache: "no-store",
+    },
+  );
   const json = await res.json();
   return NextResponse.json(json);
 }
 
 export async function POST(request: Request) {
-  if (!guard(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!guard(request))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { supabaseUrl, supabaseKey } = getSupabaseEnv();
-  if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+  if (!supabaseUrl || !supabaseKey)
+    return NextResponse.json(
+      { error: "Supabase not configured" },
+      { status: 500 },
+    );
 
   const body = await request.json();
   if (body.description) body.description = sanitizeHtml(body.description);
@@ -53,63 +63,91 @@ export async function POST(request: Request) {
     hidden: body.hidden ?? false,
   };
 
-  const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/collections`, {
-    method: 'POST',
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
+  const res = await fetch(
+    `${supabaseUrl.replace(/\/$/, "")}/rest/v1/collections`,
+    {
+      method: "POST",
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
+  );
 
   const text = await res.text();
-  if (!res.ok) return NextResponse.json({ error: text }, { status: res.status });
+  if (!res.ok)
+    return NextResponse.json({ error: text }, { status: res.status });
   safeRevalidate(TAGS.collections);
   return NextResponse.json({ success: true, result: JSON.parse(text) });
 }
 
 export async function PATCH(request: Request) {
-  if (!guard(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!guard(request))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { supabaseUrl, supabaseKey } = getSupabaseEnv();
-  if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+  if (!supabaseUrl || !supabaseKey)
+    return NextResponse.json(
+      { error: "Supabase not configured" },
+      { status: 500 },
+    );
 
   const body = await request.json();
-  if (!body.handle) return NextResponse.json({ error: 'Missing handle' }, { status: 400 });
+  if (!body.handle)
+    return NextResponse.json({ error: "Missing handle" }, { status: 400 });
 
-  const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/collections?handle=eq.${encodeURIComponent(body.handle)}`, {
-    method: 'PATCH',
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
+  const res = await fetch(
+    `${supabaseUrl.replace(/\/$/, "")}/rest/v1/collections?handle=eq.${encodeURIComponent(body.handle)}`,
+    {
+      method: "PATCH",
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  });
+  );
 
   const text = await res.text();
-  if (!res.ok) return NextResponse.json({ error: text }, { status: res.status });
+  if (!res.ok)
+    return NextResponse.json({ error: text }, { status: res.status });
   safeRevalidate(TAGS.collections);
   return NextResponse.json({ success: true, result: JSON.parse(text) });
 }
 
 export async function DELETE(request: Request) {
-  if (!guard(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!guard(request))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { supabaseUrl, supabaseKey } = getSupabaseEnv();
-  if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+  if (!supabaseUrl || !supabaseKey)
+    return NextResponse.json(
+      { error: "Supabase not configured" },
+      { status: 500 },
+    );
 
   const body = await request.json();
-  if (!body.handle) return NextResponse.json({ error: 'Missing handle' }, { status: 400 });
+  if (!body.handle)
+    return NextResponse.json({ error: "Missing handle" }, { status: 400 });
 
-  const res = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/collections?handle=eq.${encodeURIComponent(body.handle)}`, {
-    method: 'DELETE',
-    headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, Prefer: 'return=representation' },
-  });
+  const res = await fetch(
+    `${supabaseUrl.replace(/\/$/, "")}/rest/v1/collections?handle=eq.${encodeURIComponent(body.handle)}`,
+    {
+      method: "DELETE",
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        Prefer: "return=representation",
+      },
+    },
+  );
 
   const text = await res.text();
-  if (!res.ok) return NextResponse.json({ error: text }, { status: res.status });
+  if (!res.ok)
+    return NextResponse.json({ error: text }, { status: res.status });
   safeRevalidate(TAGS.collections);
   return NextResponse.json({ success: true, result: JSON.parse(text) });
 }

@@ -24,11 +24,15 @@ function sanitizeFileName(fileName: string) {
 }
 
 export async function POST(request: Request) {
-  if (!guard(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!guard(request))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { supabaseUrl, supabaseKey } = getSupabaseEnv();
   if (!supabaseUrl || !supabaseKey) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Supabase not configured" },
+      { status: 500 },
+    );
   }
 
   const formData = await request.formData();
@@ -64,7 +68,7 @@ export async function POST(request: Request) {
     );
   }
 
-    const url = `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/${STORAGE_BUCKET_NAME}/${objectPath}`;
+  const url = `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/${STORAGE_BUCKET_NAME}/${objectPath}`;
 
   return NextResponse.json({
     success: true,

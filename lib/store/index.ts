@@ -1,22 +1,22 @@
 import { DEFAULT_CURRENCY_CODE, HIDDEN_PRODUCT_TAG, TAGS } from "lib/constants";
 import {
-    unstable_cacheLife as cacheLife,
-    unstable_cacheTag as cacheTag,
-    revalidateTag,
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+  revalidateTag,
 } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { localCatalogData } from "./catalog";
 import { getCatalogFromSupabase } from "./supabase";
 import {
-    Cart,
-    CartItem,
-    CatalogData,
-    Collection,
-    Menu,
-    Page,
-    Product,
-    ProductVariant,
+  Cart,
+  CartItem,
+  CatalogData,
+  Collection,
+  Menu,
+  Page,
+  Product,
+  ProductVariant,
 } from "./types";
 
 const provider = (process.env.COMMERCE_PROVIDER || "local").toLowerCase();
@@ -76,7 +76,11 @@ function normalizeCollections(collections: Collection[]): Collection[] {
   }));
 }
 
-function sortProducts(products: Product[], sortKey?: string, reverse?: boolean): Product[] {
+function sortProducts(
+  products: Product[],
+  sortKey?: string,
+  reverse?: boolean,
+): Product[] {
   const sorted = [...products];
 
   if (sortKey === "PRICE") {
@@ -87,7 +91,8 @@ function sortProducts(products: Product[], sortKey?: string, reverse?: boolean):
     );
   } else if (sortKey === "CREATED_AT") {
     sorted.sort(
-      (a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
+      (a, b) =>
+        new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
     );
   } else if (sortKey === "BEST_SELLING") {
     sorted.sort((a, b) => {
@@ -128,7 +133,9 @@ function searchProducts(products: Product[], query?: string): Product[] {
   });
 }
 
-function buildVariantMap(products: Product[]): Map<string, { product: Product; variant: ProductVariant }> {
+function buildVariantMap(
+  products: Product[],
+): Map<string, { product: Product; variant: ProductVariant }> {
   const map = new Map<string, { product: Product; variant: ProductVariant }>();
 
   for (const product of products) {
@@ -187,7 +194,10 @@ function normalizeCartCurrency(cart: Cart): Cart {
 }
 
 function recalculateCart(cart: Cart): Cart {
-  const totalQuantity = cart.lines.reduce((sum, line) => sum + line.quantity, 0);
+  const totalQuantity = cart.lines.reduce(
+    (sum, line) => sum + line.quantity,
+    0,
+  );
   const totalAmount = cart.lines.reduce(
     (sum, line) => sum + Number(line.cost.totalAmount.amount),
     0,
@@ -336,7 +346,8 @@ export async function updateCart(
         return null;
       }
 
-      const unitPrice = Number(line.cost.totalAmount.amount) / Math.max(line.quantity, 1);
+      const unitPrice =
+        Number(line.cost.totalAmount.amount) / Math.max(line.quantity, 1);
 
       return {
         ...line,
@@ -382,13 +393,17 @@ export async function getCart(): Promise<Cart | undefined> {
   return normalized;
 }
 
-export async function getCollection(handle: string): Promise<Collection | undefined> {
+export async function getCollection(
+  handle: string,
+): Promise<Collection | undefined> {
   "use cache";
   cacheTag(TAGS.collections);
   cacheLife("days");
 
   const catalog = await getCatalog();
-  const found = catalog.collections.find((collection) => collection.handle === handle);
+  const found = catalog.collections.find(
+    (collection) => collection.handle === handle,
+  );
 
   return found ? { ...found, path: `/${found.handle}` } : undefined;
 }
@@ -482,7 +497,9 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
   return product;
 }
 
-export async function getProductRecommendations(productId: string): Promise<Product[]> {
+export async function getProductRecommendations(
+  productId: string,
+): Promise<Product[]> {
   "use cache";
   cacheTag(TAGS.products);
   cacheLife("days");
@@ -518,7 +535,9 @@ export async function getProducts({
 
   const catalog = await getCatalog();
   const filteredByCollection = collection
-    ? catalog.products.filter((product) => product.collectionHandles.includes(collection))
+    ? catalog.products.filter((product) =>
+        product.collectionHandles.includes(collection),
+      )
     : catalog.products;
 
   const visible = filteredByCollection
@@ -530,13 +549,18 @@ export async function getProducts({
 
 export async function revalidate(req: NextRequest): Promise<NextResponse> {
   const secret = req.nextUrl.searchParams.get("secret");
-  const expected = process.env.COMMERCE_REVALIDATION_SECRET || process.env.SHOPIFY_REVALIDATION_SECRET;
+  const expected =
+    process.env.COMMERCE_REVALIDATION_SECRET ||
+    process.env.SHOPIFY_REVALIDATION_SECRET;
 
   if (!expected || !secret || secret !== expected) {
     return NextResponse.json({ status: 401 });
   }
 
-  const topicHeader = (await headers()).get("x-commerce-topic") || (await headers()).get("x-shopify-topic") || "all";
+  const topicHeader =
+    (await headers()).get("x-commerce-topic") ||
+    (await headers()).get("x-shopify-topic") ||
+    "all";
 
   if (topicHeader === "collections/update" || topicHeader === "all") {
     revalidateTag(TAGS.collections, "seconds");

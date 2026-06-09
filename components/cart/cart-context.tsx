@@ -1,18 +1,13 @@
 "use client";
 
 import { DEFAULT_CURRENCY_CODE } from "lib/constants";
-import type {
-    Cart,
-    CartItem,
-    Product,
-    ProductVariant,
-} from "lib/store/types";
+import type { Cart, CartItem, Product, ProductVariant } from "lib/store/types";
 import React, {
-    createContext,
-    use,
-    useContext,
-    useMemo,
-    useOptimistic,
+  createContext,
+  use,
+  useContext,
+  useMemo,
+  useOptimistic,
 } from "react";
 
 type UpdateType = "plus" | "minus" | "delete";

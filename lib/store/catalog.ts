@@ -179,7 +179,9 @@ const products: CatalogData["products"] = [
     description: "Low-profile cap with adjustable strap.",
     descriptionHtml:
       "<p>Low-profile cap with adjustable strap and tonal embroidery.</p>",
-    options: [{ id: "opt_everyday_cap_size", name: "Size", values: ["One Size"] }],
+    options: [
+      { id: "opt_everyday_cap_size", name: "Size", values: ["One Size"] },
+    ],
     priceRange: {
       minVariantPrice: { amount: "24.00", currencyCode: "INR" },
       maxVariantPrice: { amount: "24.00", currencyCode: "INR" },
@@ -247,9 +249,7 @@ const products: CatalogData["products"] = [
     description: "Hardbound dot-grid notebook.",
     descriptionHtml:
       "<p>Hardbound dot-grid notebook with lay-flat binding and recycled paper stock.</p>",
-    options: [
-      { id: "opt_studio_notebook_size", name: "Size", values: ["A5"] },
-    ],
+    options: [{ id: "opt_studio_notebook_size", name: "Size", values: ["A5"] }],
     priceRange: {
       minVariantPrice: { amount: "18.00", currencyCode: "INR" },
       maxVariantPrice: { amount: "18.00", currencyCode: "INR" },
@@ -296,7 +296,11 @@ const collections: Collection[] = [
     "Featured",
     "Homepage featured products.",
   ),
-  collection("hidden-homepage-carousel", "Carousel", "Homepage carousel products."),
+  collection(
+    "hidden-homepage-carousel",
+    "Carousel",
+    "Homepage carousel products.",
+  ),
 ];
 
 export const localCatalogData: CatalogData = {

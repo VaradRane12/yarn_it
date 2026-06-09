@@ -40,3 +40,7 @@ supabase/.temp/
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+__pycache__*
+tools/estimator/__pycache__
+.vscode/tools/downloaded_video.mp4
+tools/downloaded_video.mp4

@@ -31,8 +31,11 @@ export default async function UpiCheckoutPage({ searchParams }: Props) {
 
   const payeeVpa = process.env.UPI_VPA || "";
   const payeeName = process.env.UPI_PAYEE_NAME || "Crochet Shop";
-  const baseTransactionNote = process.env.UPI_TRANSACTION_NOTE || "Order payment";
-  const transactionNote = orderId ? `${baseTransactionNote} ${orderId}` : baseTransactionNote;
+  const baseTransactionNote =
+    process.env.UPI_TRANSACTION_NOTE || "Order payment";
+  const transactionNote = orderId
+    ? `${baseTransactionNote} ${orderId}`
+    : baseTransactionNote;
 
   const upiUri = payeeVpa
     ? `upi://pay?pa=${encodeURIComponent(payeeVpa)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(amount)}&cu=${encodeURIComponent(currency)}&tn=${encodeURIComponent(transactionNote)}`
@@ -86,7 +89,9 @@ export default async function UpiCheckoutPage({ searchParams }: Props) {
           </div>
 
           <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <p className="mb-3 text-sm text-neutral-500">Scan QR with your UPI app</p>
+            <p className="mb-3 text-sm text-neutral-500">
+              Scan QR with your UPI app
+            </p>
             {qrSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -100,7 +105,8 @@ export default async function UpiCheckoutPage({ searchParams }: Props) {
       )}
 
       <div className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
-        After payment, verify the transaction manually from your UPI app and your bank statement.
+        After payment, verify the transaction manually from your UPI app and
+        your bank statement.
       </div>
 
       <div className="mt-6">

@@ -35,8 +35,12 @@ export default async function OrdersPage(props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const searchParams = await props.searchParams;
-  const orderId = typeof searchParams?.orderId === "string" ? searchParams.orderId.trim() : "";
-  const email = typeof searchParams?.email === "string" ? searchParams.email.trim() : "";
+  const orderId =
+    typeof searchParams?.orderId === "string"
+      ? searchParams.orderId.trim()
+      : "";
+  const email =
+    typeof searchParams?.email === "string" ? searchParams.email.trim() : "";
 
   let orders: Awaited<ReturnType<typeof getOrdersFromSupabase>> = [];
   let error: string | null = null;
@@ -48,14 +52,19 @@ export default async function OrdersPage(props: {
         email: email || undefined,
       });
     } catch (fetchError) {
-      error = fetchError instanceof Error ? fetchError.message : "Failed to load orders.";
+      error =
+        fetchError instanceof Error
+          ? fetchError.message
+          : "Failed to load orders.";
     }
   }
 
   return (
     <section className="mx-auto max-w-4xl py-10">
       <div className="mb-8 space-y-3">
-        <h1 className="text-4xl font-bold tracking-tight text-neutral-900">My Orders</h1>
+        <h1 className="text-4xl font-bold tracking-tight text-neutral-900">
+          My Orders
+        </h1>
         <p className="max-w-2xl text-sm leading-6 text-neutral-600">
           Guest orders can be looked up with an order ID and email.
         </p>
@@ -64,7 +73,9 @@ export default async function OrdersPage(props: {
       <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
         <form method="get" className="grid gap-4 sm:grid-cols-3">
           <label className="block sm:col-span-1">
-            <span className="mb-1 block text-sm font-medium text-neutral-700">Order ID</span>
+            <span className="mb-1 block text-sm font-medium text-neutral-700">
+              Order ID
+            </span>
             <input
               name="orderId"
               defaultValue={orderId}
@@ -73,7 +84,9 @@ export default async function OrdersPage(props: {
             />
           </label>
           <label className="block sm:col-span-1">
-            <span className="mb-1 block text-sm font-medium text-neutral-700">Email</span>
+            <span className="mb-1 block text-sm font-medium text-neutral-700">
+              Email
+            </span>
             <input
               name="email"
               defaultValue={email}
@@ -105,17 +118,25 @@ export default async function OrdersPage(props: {
         orders.length ? (
           <div className="mt-8 space-y-4">
             {orders.map((order) => (
-              <article key={order.id} className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+              <article
+                key={order.id}
+                className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-semibold text-neutral-900">{order.id}</h2>
+                    <h2 className="text-lg font-semibold text-neutral-900">
+                      {order.id}
+                    </h2>
                     <p className="text-sm text-neutral-500">
                       {formatOrderDate(order.createdAt)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-neutral-900">
-                      {formatOrderTotal(order.totalAmount.amount, order.currencyCode)}
+                      {formatOrderTotal(
+                        order.totalAmount.amount,
+                        order.currencyCode,
+                      )}
                     </p>
                     <p className="text-xs uppercase tracking-wide text-neutral-500">
                       {order.status} · {order.paymentStatus}
@@ -125,27 +146,50 @@ export default async function OrdersPage(props: {
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Customer</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                      Customer
+                    </p>
                     <p className="mt-1 text-sm text-neutral-700">
-                      {order.customerEmail || order.guestEmail || "Guest checkout"}
+                      {order.customerEmail ||
+                        order.guestEmail ||
+                        "Guest checkout"}
                     </p>
                   </div>
                   {order.shipping ? (
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Shipping</p>
+                      <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                        Shipping
+                      </p>
                       <p className="mt-1 text-sm text-neutral-700">
                         {order.shipping.name || ""}
                         <br />
                         {order.shipping.line1}
-                        {order.shipping.line2 ? <><br />{order.shipping.line2}</> : null}
-                        <br />{order.shipping.city}{order.shipping.state ? `, ${order.shipping.state}` : ""}
-                        <br />{order.shipping.postalCode} · {order.shipping.country}
-                        {order.shipping.phone ? <><br />{order.shipping.phone}</> : null}
+                        {order.shipping.line2 ? (
+                          <>
+                            <br />
+                            {order.shipping.line2}
+                          </>
+                        ) : null}
+                        <br />
+                        {order.shipping.city}
+                        {order.shipping.state
+                          ? `, ${order.shipping.state}`
+                          : ""}
+                        <br />
+                        {order.shipping.postalCode} · {order.shipping.country}
+                        {order.shipping.phone ? (
+                          <>
+                            <br />
+                            {order.shipping.phone}
+                          </>
+                        ) : null}
                       </p>
                     </div>
                   ) : null}
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Items</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                      Items
+                    </p>
                     <p className="mt-1 text-sm text-neutral-700">
                       {order.cartSnapshot.totalQuantity} items
                     </p>
@@ -154,15 +198,23 @@ export default async function OrdersPage(props: {
 
                 <div className="mt-5 space-y-3">
                   {order.cartSnapshot.lines.map((line) => (
-                    <div key={line.id} className="flex items-center justify-between gap-4 rounded-lg bg-neutral-50 p-3">
+                    <div
+                      key={line.id}
+                      className="flex items-center justify-between gap-4 rounded-lg bg-neutral-50 p-3"
+                    >
                       <div>
-                        <p className="font-medium text-neutral-900">{line.merchandise.product.title}</p>
+                        <p className="font-medium text-neutral-900">
+                          {line.merchandise.product.title}
+                        </p>
                         <p className="text-sm text-neutral-500">
                           {line.merchandise.title} · Qty {line.quantity}
                         </p>
                       </div>
                       <p className="text-sm font-medium text-neutral-900">
-                        {formatOrderTotal(line.cost.totalAmount.amount, line.cost.totalAmount.currencyCode)}
+                        {formatOrderTotal(
+                          line.cost.totalAmount.amount,
+                          line.cost.totalAmount.currencyCode,
+                        )}
                       </p>
                     </div>
                   ))}
