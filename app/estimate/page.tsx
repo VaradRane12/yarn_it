@@ -113,7 +113,20 @@ export default function EstimatePage() {
         throw new Error(json.error ?? "Failed to estimate price");
       setResult(json);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      if (
+        msg.includes("500") ||
+        msg.includes("timeout") ||
+        msg.includes("Failed to fetch") ||
+        msg.includes("Ollama failed") ||
+        msg.includes("Errno 60")
+      ) {
+        setError(
+          "The estimator is currently unavailable for a short bit while the server syncs. It will be back shortly!",
+        );
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
