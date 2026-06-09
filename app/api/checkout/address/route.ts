@@ -5,7 +5,6 @@ import {
   MISSING_ORDERS_TABLE_MESSAGE,
 } from "lib/store/order-errors";
 import { NextResponse } from "next/server";
-import { notify } from "lib/notify";
 
 function getSupabaseEnv() {
   return {
@@ -110,15 +109,6 @@ export async function POST(request: Request) {
       cart.cost.totalAmount.currencyCode,
     );
     redirectUrl.searchParams.set("orderId", orderId);
-
-    // Send a notification without blocking the response
-    notify(
-      `🛒 **New Order Placed!**\n` +
-      `- **Order ID:** \`${orderId}\`\n` +
-      `- **Total:** ₹${cart.cost.totalAmount.amount}\n` +
-      `- **Customer:** ${name} (${email})\n` +
-      `- **Location:** ${city}, ${state}`
-    );
 
     const output = NextResponse.redirect(redirectUrl);
     // set cookies for address so subsequent flows can reuse
