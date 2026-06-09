@@ -22,7 +22,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV CI=true
 
-RUN pnpm run build
+RUN pnpm config set fetch-timeout 600000 && pnpm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
