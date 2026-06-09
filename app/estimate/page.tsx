@@ -18,6 +18,12 @@ type EstimateResponse = {
   keywords?: string;
   suggested_price_low?: number;
   suggested_price_high?: number;
+  hours_low?: number;
+  hours_high?: number;
+  costs?: {
+    labour_low: number;
+    labour_high: number;
+  };
   report?: string;
   error?: string;
 };
@@ -306,9 +312,9 @@ export default function EstimatePage() {
               </div>
             ) : result?.suggested_price_low && result?.suggested_price_high ? (
               <div className="flex w-full flex-col items-center gap-5 text-center">
-                {result.keywords && (
+                {result.hours_low && result.hours_high && (
                   <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">
-                    {result.keywords.split(",")[0]?.trim()}
+                    Estimated Time: {result.hours_low} – {result.hours_high} hours
                   </p>
                 )}
                 <p className="text-5xl font-bold tracking-tight text-neutral-950">
@@ -333,7 +339,7 @@ export default function EstimatePage() {
                         maker communities, and tutorial data.
                       </p>
                       <p className="mt-1.5 text-neutral-400">
-                        Labour rate: ₹120–150/hr · Yarn: ₹0.80/m
+                        {result.costs?.labour_low && result.hours_low ? `Calculated at ~₹${Math.round(result.costs.labour_low / result.hours_low)}/hr` : 'Includes material costs and estimated labour hours'}
                       </p>
                     </div>
                   </div>
