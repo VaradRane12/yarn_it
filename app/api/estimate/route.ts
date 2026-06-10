@@ -151,7 +151,7 @@ export async function POST(request: Request) {
         "[estimate] Python server unavailable, using legacy fallback:",
         proxyErr,
       );
-      return legacyEstimate(image, dimensions);
+      return await legacyEstimate(image, dimensions);
     }
   } catch (error) {
     return NextResponse.json(

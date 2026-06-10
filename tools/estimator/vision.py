@@ -22,7 +22,18 @@ def describe_item(image_bytes: bytes) -> str:
     Accepts raw image bytes — works from both CLI and web uploads.
     """
     client = _client()
-    b64 = base64.b64encode(image_bytes).decode()
+    
+    # Ollama vision models (like llava) only reliably support JPEG/PNG.
+    # We must convert images like .webp to JPEG before sending.
+    from PIL import Image
+    from io import BytesIO
+    with Image.open(BytesIO(image_bytes)) as img:
+        img = img.convert("RGB")
+        out = BytesIO()
+        img.save(out, format="JPEG")
+        jpg_bytes = out.getvalue()
+        
+    b64 = base64.b64encode(jpg_bytes).decode()
     prompt = (
         "Look at this handmade crochet item carefully.\n"
         "Respond in this exact format (one line each, no extra text):\n"
