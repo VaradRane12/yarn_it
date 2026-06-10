@@ -78,8 +78,6 @@ async def estimate(
             "yarn_weight": result.yarn_weight,
             "costs": {
                 "yarn": result.yarn_cost,
-                "safety_eyes": result.safety_eyes_cost,
-                "stuffing": result.stuffing_cost,
                 "overhead": result.overhead,
                 "labour_low": result.labour_low,
                 "labour_high": result.labour_high,

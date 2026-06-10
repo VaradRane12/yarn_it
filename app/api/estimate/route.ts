@@ -4,10 +4,10 @@
  * Proxies the image + dimensions to the Python FastAPI estimator server
  * (tools/estimator/server.py running on port 8001).
  *
- * If the Python server is unreachable it falls back to the legacy
  * direct-Ollama path so the page doesn't completely break.
  */
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 const ESTIMATOR_URL =
   process.env.ESTIMATOR_API_URL ||
@@ -113,13 +113,14 @@ export async function POST(request: Request) {
       const proxyForm = new FormData();
       proxyForm.append("image", image);
       proxyForm.append("dimensions", dimensions);
+      proxyForm.append("skip_youtube", "true");
       if (email) proxyForm.append("email", email);
       if (skipYoutube) proxyForm.append("skip_youtube", "true");
 
       const resp = await fetch(`${ESTIMATOR_URL}/estimate`, {
         method: "POST",
         body: proxyForm,
-        signal: AbortSignal.timeout(90_000), // 90 second timeout
+        signal: AbortSignal.timeout(120_000), // 120 second timeout
       });
 
       if (!resp.ok) {
@@ -128,6 +129,53 @@ export async function POST(request: Request) {
       }
 
       const data = await resp.json();
+
+      // --- SUPABASE TRACKING LOGIC ---
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl && supabaseKey) {
+        try {
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          const ext = image.name.split('.').pop() || 'jpg';
+          const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+          const { data: uploadData, error: uploadErr } = await supabase.storage
+            .from("estimate_uploads")
+            .upload(filename, image, { contentType: image.type });
+
+          if (!uploadErr && uploadData) {
+            const { data: publicUrlData } = supabase.storage
+              .from("estimate_uploads")
+              .getPublicUrl(uploadData.path);
+            
+            await supabase.from("estimate_history").insert({
+              email: email || null,
+              image_url: publicUrlData.publicUrl,
+            });
+
+            // Prune to 15 records
+            const { data: oldRecords } = await supabase
+              .from("estimate_history")
+              .select("id, image_url")
+              .order("created_at", { ascending: false })
+              .range(15, 100);
+
+            if (oldRecords && oldRecords.length > 0) {
+              const idsToDelete = oldRecords.map((r) => r.id);
+              const filesToDelete = oldRecords.map((r) => {
+                const parts = r.image_url.split('/');
+                return parts[parts.length - 1];
+              });
+              await supabase.from("estimate_history").delete().in("id", idsToDelete);
+              await supabase.storage.from("estimate_uploads").remove(filesToDelete);
+            }
+          } else {
+            console.error("[estimate] Supabase upload error:", uploadErr);
+          }
+        } catch (supabaseErr) {
+          console.error("[estimate] Supabase tracking failed:", supabaseErr);
+        }
+      }
 
       return NextResponse.json({ success: true, source: "python", ...data });
     } catch (proxyErr) {

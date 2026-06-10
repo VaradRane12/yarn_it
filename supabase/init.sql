@@ -101,3 +101,24 @@ CREATE TABLE IF NOT EXISTS app_keys (
   key TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Estimator History
+CREATE TABLE IF NOT EXISTS estimate_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT,
+  image_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create storage bucket if not exists (Requires the storage schema to exist, handled by Supabase)
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('estimate_uploads', 'estimate_uploads', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Public Access"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'estimate_uploads');
+
+CREATE POLICY "Authenticated Insert"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'estimate_uploads');
