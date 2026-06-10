@@ -9,16 +9,6 @@
  */
 import { NextResponse } from "next/server";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // Allow any origin for ease of use across domains/tunnels
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders });
-}
-
 const ESTIMATOR_URL =
   process.env.ESTIMATOR_API_URL ||
   `http://localhost:${process.env.ESTIMATOR_API_PORT || "8001"}`;
@@ -86,16 +76,13 @@ Respond with ONLY a JSON object, no explanation:
     // couldn't parse — fall back to showing raw text
   }
 
-  return NextResponse.json(
-    {
-      success: true,
-      keywords: keywords.trim(),
-      suggested_price_low: low,
-      suggested_price_high: high,
-      source: "legacy",
-    },
-    { headers: corsHeaders }
-  );
+  return NextResponse.json({
+    success: true,
+    keywords: keywords.trim(),
+    suggested_price_low: low,
+    suggested_price_high: high,
+    source: "legacy",
+  });
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
@@ -110,7 +97,7 @@ export async function POST(request: Request) {
     if (!(image instanceof File)) {
       return NextResponse.json(
         { success: false, error: "Missing image" },
-        { status: 400, headers: corsHeaders },
+        { status: 400 },
       );
     }
 
@@ -142,10 +129,7 @@ export async function POST(request: Request) {
 
       const data = await resp.json();
 
-      return NextResponse.json(
-        { success: true, source: "python", ...data },
-        { headers: corsHeaders }
-      );
+      return NextResponse.json({ success: true, source: "python", ...data });
     } catch (proxyErr) {
       console.warn(
         "[estimate] Python server unavailable, using legacy fallback:",
@@ -159,7 +143,7 @@ export async function POST(request: Request) {
         success: false,
         error: error instanceof Error ? error.message : "Estimation failed",
       },
-      { status: 500, headers: corsHeaders },
+      { status: 500 },
     );
   }
 }
