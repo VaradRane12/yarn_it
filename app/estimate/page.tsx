@@ -107,7 +107,12 @@ export default function EstimatePage() {
       fd.append("image", image);
       fd.append("dimensions", dimensions);
       fd.append("email", email.trim());
-      const res = await fetch("/api/estimate", { method: "POST", body: fd });
+
+      const endpoint = window.location.hostname.includes("yarnit.store")
+        ? "https://home.yarnit.store/api/estimate"
+        : "/api/estimate";
+
+      const res = await fetch(endpoint, { method: "POST", body: fd });
       const text = await res.text();
       let json: EstimateResponse;
       try {
