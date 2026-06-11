@@ -139,9 +139,11 @@ export async function POST(request: Request) {
           const ext = image.name.split('.').pop() || 'jpg';
           const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
 
+          const fileBuffer = await image.arrayBuffer();
+
           const { data: uploadData, error: uploadErr } = await supabase.storage
             .from("estimate_uploads")
-            .upload(filename, image, { contentType: image.type });
+            .upload(filename, fileBuffer, { contentType: image.type });
 
           if (!uploadErr && uploadData) {
             const { data: publicUrlData } = supabase.storage
@@ -175,6 +177,8 @@ export async function POST(request: Request) {
         } catch (supabaseErr) {
           console.error("[estimate] Supabase tracking failed:", supabaseErr);
         }
+      } else {
+        console.warn("[estimate] Skipping Supabase tracking: Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
       }
 
       return NextResponse.json({ success: true, source: "python", ...data });

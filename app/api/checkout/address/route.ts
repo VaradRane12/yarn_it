@@ -99,7 +99,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: body }, { status: res.status });
     }
 
-    const redirectUrl = new URL(`/upi-checkout`, request.url);
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+    const proto = request.headers.get("x-forwarded-proto") || "http";
+    const baseUrl = `${proto}://${host}`;
+    
+    const redirectUrl = new URL(`/upi-checkout`, baseUrl);
     redirectUrl.searchParams.set(
       "amount",
       String(cart.cost.totalAmount.amount),
