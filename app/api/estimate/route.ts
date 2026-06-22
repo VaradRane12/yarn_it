@@ -181,12 +181,14 @@ export async function POST(request: Request) {
         console.warn("[estimate] Skipping Supabase tracking: Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
       }
 
-      return NextResponse.json({ success: true, source: "python", ...data });
+      // Return the job_id instantly
+      return NextResponse.json({ success: true, source: "python", job_id: data.job_id, status: data.status });
     } catch (proxyErr) {
       console.warn(
         "[estimate] Python server unavailable, using legacy fallback:",
         proxyErr,
       );
+      // Legacy fallback blocks for 60s, so it might timeout if abused, but it's just a fallback.
       return await legacyEstimate(image, dimensions);
     }
   } catch (error) {

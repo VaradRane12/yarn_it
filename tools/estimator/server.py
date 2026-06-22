@@ -13,8 +13,9 @@ Start with:
 from __future__ import annotations
 
 import uvicorn
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+import uuid
 
 from config import API_PORT
 from vision import describe_and_extract
@@ -43,20 +44,10 @@ def health() -> dict:
     return {"status": "ok"}
 
 
-@app.post("/estimate")
-async def estimate(
-    image: UploadFile = File(..., description="Photo of the crochet item"),
-    dimensions: str = Form(..., description="Size, e.g. '12 cm tall'"),
-    skip_youtube: bool = Form(False, description="Set true to skip YouTube step"),
-) -> dict:
-    """
-    Run the full price estimation pipeline.
+# Global jobs dictionary to store job statuses and results
+jobs = {}
 
-    Returns a JSON object with the price breakdown and a formatted report string.
-    """
-    # Read image bytes directly — avoids temp file path issues with Ollama
-    image_bytes = await image.read()
-
+def process_estimate_job(job_id: str, image_bytes: bytes, dimensions: str, skip_youtube: bool):
     try:
         description, keywords = describe_and_extract(image_bytes)
 
@@ -68,7 +59,8 @@ async def estimate(
         agg = aggregate(keywords, description, dimensions, yt_insights, pat_insights)
         result: PriceBreakdown = calculate_price(agg)
 
-        return {
+        jobs[job_id]["status"] = "completed"
+        jobs[job_id]["result"] = {
             "keywords": keywords,
             "description": description,
             "dimensions": dimensions,
@@ -98,7 +90,37 @@ async def estimate(
     except Exception as e:
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        jobs[job_id]["status"] = "failed"
+        jobs[job_id]["error"] = str(e)
+
+
+@app.post("/estimate")
+async def estimate(
+    background_tasks: BackgroundTasks,
+    image: UploadFile = File(..., description="Photo of the crochet item"),
+    dimensions: str = Form(..., description="Size, e.g. '12 cm tall'"),
+    skip_youtube: bool = Form(False, description="Set true to skip YouTube step"),
+) -> dict:
+    """
+    Starts the full price estimation pipeline in the background.
+    Returns a job_id instantly to prevent Cloudflare 524 timeouts.
+    """
+    image_bytes = await image.read()
+    job_id = str(uuid.uuid4())
+    
+    jobs[job_id] = {"status": "pending"}
+    background_tasks.add_task(process_estimate_job, job_id, image_bytes, dimensions, skip_youtube)
+    
+    return {"job_id": job_id, "status": "pending"}
+
+@app.get("/estimate/{job_id}")
+async def get_estimate(job_id: str) -> dict:
+    """
+    Poll this endpoint to check if the job is completed.
+    """
+    if job_id not in jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return jobs[job_id]
 
 
 if __name__ == "__main__":

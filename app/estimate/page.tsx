@@ -26,6 +26,8 @@ type EstimateResponse = {
   };
   report?: string;
   error?: string;
+  job_id?: string;
+  status?: string;
 };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -118,7 +120,27 @@ export default function EstimatePage() {
       }
       if (!res.ok || !json.success)
         throw new Error(json.error ?? "Failed to estimate price");
-      setResult(json);
+      
+      if (json.job_id) {
+        let currentStatus = json.status;
+        while (currentStatus === "pending") {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          const statusRes = await fetch(`/api/estimate/status?job_id=${json.job_id}`);
+          const statusJson = await statusRes.json();
+          if (!statusJson.success) {
+            throw new Error(statusJson.error ?? "Polling failed");
+          }
+          currentStatus = statusJson.status;
+          if (currentStatus === "completed") {
+            setResult(statusJson);
+            break;
+          } else if (currentStatus === "failed") {
+            throw new Error(statusJson.error ?? "Estimation job failed");
+          }
+        }
+      } else {
+        setResult(json);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
       if (
