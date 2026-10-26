@@ -43,7 +43,12 @@ async function emailWhenDone(
 
       const result = job.result as EstimateResult;
       const title = estimateTitle(result);
-      const owner = process.env.NEXT_PUBLIC_OWNER_EMAIL;
+      const rawOwner = (process.env.NEXT_PUBLIC_OWNER_EMAIL || "").trim();
+      const owner = isValidEmail(rawOwner) ? rawOwner : undefined;
+      if (rawOwner && !owner)
+        console.warn(
+          "[estimate] NEXT_PUBLIC_OWNER_EMAIL is malformed, skipping owner copy",
+        );
       await Promise.all([
         customerEmail
           ? sendEmail({
