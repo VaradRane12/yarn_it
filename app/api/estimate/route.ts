@@ -26,6 +26,7 @@ async function emailWhenDone(
   jobId: string,
   customerEmail: string,
   imageUrl: string | null,
+  notes: string,
 ) {
   const deadline = Date.now() + 10 * 60_000;
   while (Date.now() < deadline) {
@@ -59,6 +60,7 @@ async function emailWhenDone(
                 result,
                 imageUrl,
                 customerEmail,
+                notes,
                 forOwner: false,
               }),
               replyTo: owner,
@@ -72,6 +74,7 @@ async function emailWhenDone(
                 result,
                 imageUrl,
                 customerEmail,
+                notes,
                 forOwner: true,
               }),
               replyTo: customerEmail || undefined,
@@ -167,6 +170,10 @@ export async function POST(request: Request) {
     const rawEmail = String(formData.get("email") || "").trim();
     const email = isValidEmail(rawEmail) ? rawEmail : "";
     const skipYoutube = formData.get("skip_youtube") === "true";
+    // Optional free-text from the customer, only used in the emails.
+    const notes = String(formData.get("notes") || "")
+      .trim()
+      .slice(0, 1000);
 
     if (!(image instanceof File)) {
       return NextResponse.json(
@@ -267,7 +274,8 @@ export async function POST(request: Request) {
         );
       }
 
-      if (data.job_id) after(() => emailWhenDone(data.job_id, email, imageUrl));
+      if (data.job_id)
+        after(() => emailWhenDone(data.job_id, email, imageUrl, notes));
 
       // Return the job_id instantly
       return NextResponse.json({

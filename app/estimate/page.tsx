@@ -3,6 +3,7 @@
 import { useRef, useMemo, useState, useEffect } from "react";
 
 const ACCEPTED_FORMATS = ["image/jpeg", "image/png", "image/webp"];
+const NOTES_MAX = 1000;
 
 const STEPS = [
   { label: "Data ingestion", ms: 0 },
@@ -42,6 +43,7 @@ export default function EstimatePage() {
   const [email, setEmail] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [dimensions, setDimensions] = useState("12 cm tall");
+  const [notes, setNotes] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -105,6 +107,7 @@ export default function EstimatePage() {
       fd.append("image", image);
       fd.append("dimensions", dimensions);
       fd.append("email", email.trim());
+      if (notes.trim()) fd.append("notes", notes.trim());
 
       const res = await fetch("/api/estimate", { method: "POST", body: fd });
       const text = await res.text();
@@ -268,6 +271,22 @@ export default function EstimatePage() {
                   placeholder="e.g. 12 cm tall"
                   className="field"
                 />
+              </div>
+
+              <div>
+                <SectionLabel>Anything else? (optional)</SectionLabel>
+                <textarea
+                  id="est-notes"
+                  rows={3}
+                  maxLength={NOTES_MAX}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Colours you'd like, a deadline, who it's for…"
+                  className="field resize-y"
+                />
+                <p className="mt-1.5 text-right text-xs font-medium text-ink/50">
+                  {notes.length}/{NOTES_MAX}
+                </p>
               </div>
 
               <button

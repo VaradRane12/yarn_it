@@ -53,11 +53,13 @@ export function estimateEmailHtml({
   result,
   imageUrl,
   customerEmail,
+  notes = "",
   forOwner,
 }: {
   result: EstimateResult;
   imageUrl: string | null;
   customerEmail: string;
+  notes?: string;
   forOwner: boolean;
 }) {
   const title = estimateTitle(result);
@@ -104,6 +106,11 @@ export function estimateEmailHtml({
             ${
               imageUrl
                 ? `<tr><td style="padding:20px 28px 0;"><img src="${esc(imageUrl)}" alt="Your photo" width="504" style="display:block;width:100%;max-width:504px;height:auto;border:3px solid ${INK};border-radius:20px;" /></td></tr>`
+                : ""
+            }
+            ${
+              notes
+                ? `<tr><td style="padding:20px 28px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#74e4b5;border:3px solid ${INK};border-radius:20px;"><tr><td style="padding:16px 20px;font:15px/1.5 ${BODY};color:${INK};"><div style="font:700 12px ${BODY};letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">✎ ${forOwner ? "Their note" : "Your note"}</div>${esc(notes).replace(/\r?\n/g, "<br/>")}</td></tr></table></td></tr>`
                 : ""
             }
             <tr><td style="padding:20px 28px 0;">
