@@ -1,5 +1,5 @@
 import CartModal from "components/cart/modal";
-import LogoSquare from "components/logo-square";
+import LogoIcon from "components/icons/logo";
 import { getCollections } from "lib/store";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -32,47 +32,47 @@ export async function Navbar() {
   ];
 
   return (
-    <nav className="relative flex items-center justify-between p-4 lg:px-6">
+    <nav className="sticky top-3 z-40 mx-3 mt-3 flex items-center justify-between rounded-full border-[3px] border-ink bg-cream/85 px-4 py-2 shadow-chunky-sm backdrop-blur-md lg:mx-6 lg:px-6">
       <div className="block flex-none md:hidden">
         <Suspense fallback={null}>
           <MobileMenu menu={menu} />
         </Suspense>
       </div>
       <div className="flex w-full items-center">
-        <div className="flex w-full md:w-1/3">
+        <div className="flex w-full md:flex-1 lg:w-1/3">
           <Link
             href="/"
             prefetch={true}
             className="mr-2 flex w-full items-center justify-center md:w-auto lg:mr-6"
           >
-            <LogoSquare />
-            <div className="ml-2 flex-none text-sm font-medium uppercase md:hidden lg:block">
+            <LogoIcon className="h-11 w-11" />
+            <div className="ml-2 flex-none font-display text-2xl uppercase tracking-wide">
               {SITE_NAME}
             </div>
           </Link>
           {menu.length ? (
-            <ul className="hidden gap-6 text-sm md:flex md:items-center">
+            <ul className="hidden gap-5 text-sm font-bold uppercase tracking-wider md:flex md:items-center">
               <li>
                 <Link
                   href="/search"
                   prefetch={true}
-                  className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
+                  className="rounded-full px-2 py-1 transition-colors hover:bg-butter"
                 >
                   Products
                 </Link>
               </li>
               {categoryMenu.length ? (
                 <li className="group relative py-1">
-                  <span className="cursor-default text-neutral-500 underline-offset-4 group-hover:text-black dark:text-neutral-400 dark:group-hover:text-neutral-300">
+                  <span className="cursor-default rounded-full px-2 py-1 transition-colors group-hover:bg-butter">
                     Categories
                   </span>
-                  <ul className="invisible absolute left-0 top-full z-30 min-w-48 rounded-md border border-neutral-200 bg-white p-2 opacity-0 shadow-lg transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 dark:border-neutral-800 dark:bg-black">
+                  <ul className="invisible absolute left-0 top-full z-30 min-w-48 rounded-2xl border-[3px] border-ink bg-cream p-2 opacity-0 shadow-chunky-sm transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 dark:border-neutral-800 dark:bg-black">
                     {categoryMenu.map((item) => (
                       <li key={item.title}>
                         <Link
                           href={item.path}
                           prefetch={true}
-                          className="block rounded px-3 py-2 text-neutral-600 hover:bg-neutral-100 hover:text-black dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-white"
+                          className="block rounded-xl px-3 py-2 hover:bg-lilac"
                         >
                           {item.title}
                         </Link>
@@ -86,7 +86,7 @@ export async function Navbar() {
                   <Link
                     href={item.path}
                     prefetch={true}
-                    className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
+                    className="rounded-full px-2 py-1 transition-colors hover:bg-butter"
                   >
                     {item.title}
                   </Link>
@@ -95,12 +95,12 @@ export async function Navbar() {
             </ul>
           ) : null}
         </div>
-        <div className="hidden justify-center md:flex md:w-1/3">
+        <div className="hidden justify-center lg:flex lg:w-1/3">
           <Suspense fallback={<SearchSkeleton />}>
             <Search />
           </Suspense>
         </div>
-        <div className="flex justify-end md:w-1/3">
+        <div className="flex justify-end lg:w-1/3">
           <CartModal />
         </div>
       </div>
