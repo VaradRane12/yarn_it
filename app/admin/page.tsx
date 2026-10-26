@@ -1,5 +1,6 @@
 "use client";
 
+import EstimatorPricing from "components/admin/estimator-pricing";
 import { useState } from "react";
 
 function FormField({ children }: { children: React.ReactNode }) {
@@ -416,6 +417,8 @@ export default function AdminPage() {
           </button>
         </div>
       </FormField>
+
+      <EstimatorPricing adminPassword={adminPassword} />
 
       <section className="mb-8">
         <h2 className="mb-2 text-lg font-semibold">Create product</h2>

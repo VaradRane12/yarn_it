@@ -8,6 +8,7 @@
  */
 import { createClient } from "@supabase/supabase-js";
 import { isValidEmail, sendEmail } from "lib/email";
+import { getPricingSettings } from "lib/estimator-settings";
 import {
   estimateEmailHtml,
   estimateTitle,
@@ -189,6 +190,8 @@ export async function POST(request: Request) {
       proxyForm.append("skip_youtube", "true");
       if (email) proxyForm.append("email", email);
       if (skipYoutube) proxyForm.append("skip_youtube", "true");
+      const pricing = await getPricingSettings();
+      if (pricing) proxyForm.append("pricing", JSON.stringify(pricing));
 
       const resp = await fetch(`${ESTIMATOR_URL}/estimate`, {
         method: "POST",

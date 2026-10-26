@@ -15,14 +15,16 @@ from __future__ import annotations
 import uvicorn
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+import json
 import uuid
+from typing import Optional
 
 from config import API_PORT
 from vision import describe_and_extract
 from youtube import search_youtube_tutorials
 from patterns import search_patterns
 from aggregator import aggregate
-from pricing import calculate_price, PriceBreakdown
+from pricing import DEFAULT_SETTINGS, calculate_price, PriceBreakdown
 
 app = FastAPI(
     title="Crochet Price Estimator API",
@@ -44,10 +46,16 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/settings/defaults")
+def settings_defaults() -> dict:
+    """Pricing values from .env, shown in the admin dashboard as the baseline."""
+    return DEFAULT_SETTINGS
+
+
 # Global jobs dictionary to store job statuses and results
 jobs = {}
 
-def process_estimate_job(job_id: str, image_bytes: bytes, dimensions: str, skip_youtube: bool):
+def process_estimate_job(job_id: str, image_bytes: bytes, dimensions: str, skip_youtube: bool, pricing: Optional[dict] = None):
     try:
         description, keywords = describe_and_extract(image_bytes)
 
@@ -57,7 +65,7 @@ def process_estimate_job(job_id: str, image_bytes: bytes, dimensions: str, skip_
 
         pat_insights = search_patterns(keywords)
         agg = aggregate(keywords, description, dimensions, yt_insights, pat_insights)
-        result: PriceBreakdown = calculate_price(agg)
+        result: PriceBreakdown = calculate_price(agg, pricing)
 
         jobs[job_id]["status"] = "completed"
         jobs[job_id]["result"] = {
@@ -100,6 +108,7 @@ async def estimate(
     image: UploadFile = File(..., description="Photo of the crochet item"),
     dimensions: str = Form(..., description="Size, e.g. '12 cm tall'"),
     skip_youtube: bool = Form(False, description="Set true to skip YouTube step"),
+    pricing: Optional[str] = Form(None, description="JSON pricing overrides from the admin dashboard"),
 ) -> dict:
     """
     Starts the full price estimation pipeline in the background.
@@ -109,7 +118,13 @@ async def estimate(
     job_id = str(uuid.uuid4())
     
     jobs[job_id] = {"status": "pending"}
-    background_tasks.add_task(process_estimate_job, job_id, image_bytes, dimensions, skip_youtube)
+    try:
+        overrides = json.loads(pricing) if pricing else None
+    except ValueError:
+        overrides = None
+    if not isinstance(overrides, dict):
+        overrides = None
+    background_tasks.add_task(process_estimate_job, job_id, image_bytes, dimensions, skip_youtube, overrides)
     
     return {"job_id": job_id, "status": "pending"}
 
