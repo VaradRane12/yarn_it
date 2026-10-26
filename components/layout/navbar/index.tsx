@@ -44,7 +44,8 @@ export async function Navbar() {
           prefetch={true}
           className="flex flex-1 items-center justify-center gap-2 md:flex-none"
         >
-          <LogoIcon className="h-11 w-11 flex-none" />
+          {/* Logo art has wide padding, so it overhangs the pill instead of growing it. */}
+          <LogoIcon className="-my-4 h-16 w-16 flex-none md:-my-6 md:h-20 md:w-20" />
           <span className="whitespace-nowrap font-display text-2xl uppercase tracking-wide">
             {SITE_NAME}
           </span>
