@@ -16,7 +16,9 @@ export async function GET(request: Request) {
       );
     }
 
-    const resp = await fetch(`${ESTIMATOR_URL}/estimate/${jobId}`);
+    const resp = await fetch(
+      `${ESTIMATOR_URL}/estimate/${encodeURIComponent(jobId)}`,
+    );
 
     if (!resp.ok) {
       const err = await resp.text();

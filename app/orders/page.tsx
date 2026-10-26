@@ -1,3 +1,4 @@
+import PageHeader from "components/page-header";
 import { getOrdersFromSupabase } from "lib/store/supabase";
 
 function formatOrderTotal(amount: string, currencyCode: string) {
@@ -60,56 +61,51 @@ export default async function OrdersPage(props: {
   }
 
   return (
-    <section className="mx-auto max-w-4xl py-10">
-      <div className="mb-8 space-y-3">
-        <h1 className="text-4xl font-bold tracking-tight text-neutral-900">
-          My Orders
-        </h1>
-        <p className="max-w-2xl text-sm leading-6 text-neutral-600">
-          Guest orders can be looked up with an order ID and email.
-        </p>
-      </div>
+    <section className="mx-auto max-w-4xl px-4 pb-20">
+      <PageHeader
+        eyebrow="Track it"
+        title={
+          <>
+            Your <span className="text-outline">orders</span>
+          </>
+        }
+      >
+        Look up an order with its order ID, your email, or both.
+      </PageHeader>
 
-      <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <div className="card">
         <form method="get" className="grid gap-4 sm:grid-cols-3">
           <label className="block sm:col-span-1">
-            <span className="mb-1 block text-sm font-medium text-neutral-700">
-              Order ID
-            </span>
+            <span className="field-label">Order ID</span>
             <input
               name="orderId"
               defaultValue={orderId}
-              className="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-rose-500"
+              className="field"
               placeholder="ord_..."
             />
           </label>
           <label className="block sm:col-span-1">
-            <span className="mb-1 block text-sm font-medium text-neutral-700">
-              Email
-            </span>
+            <span className="field-label">Email</span>
             <input
               name="email"
               defaultValue={email}
-              className="w-full rounded-lg border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-rose-500"
+              className="field"
               placeholder="you@example.com"
             />
           </label>
           <div className="flex items-end sm:col-span-1">
-            <button
-              type="submit"
-              className="w-full rounded-full bg-rose-500 px-5 py-3 text-sm font-medium text-white"
-            >
-              Find guest order
+            <button type="submit" className="btn w-full">
+              Find my order
             </button>
           </div>
         </form>
-        <p className="mt-4 text-xs text-neutral-500">
-          Guest orders can be searched by order ID, email, or both.
+        <p className="mt-4 text-xs font-medium text-ink/60">
+          Your order ID is in your confirmation, e.g. ord_…
         </p>
       </div>
 
       {error ? (
-        <p className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <p className="mt-6 rounded-2xl border-2 border-ink bg-coral/30 p-4 text-sm font-medium">
           {error}
         </p>
       ) : null}
@@ -118,27 +114,24 @@ export default async function OrdersPage(props: {
         orders.length ? (
           <div className="mt-8 space-y-4">
             {orders.map((order) => (
-              <article
-                key={order.id}
-                className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
-              >
+              <article key={order.id} className="card">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-semibold text-neutral-900">
+                    <h2 className="font-display text-2xl uppercase">
                       {order.id}
                     </h2>
-                    <p className="text-sm text-neutral-500">
+                    <p className="text-sm font-medium text-ink/60">
                       {formatOrderDate(order.createdAt)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-neutral-900">
+                    <p className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-cream">
                       {formatOrderTotal(
                         order.totalAmount.amount,
                         order.currencyCode,
                       )}
                     </p>
-                    <p className="text-xs uppercase tracking-wide text-neutral-500">
+                    <p className="mt-2 text-xs font-bold uppercase tracking-wide">
                       {order.status} · {order.paymentStatus}
                     </p>
                   </div>
@@ -146,10 +139,8 @@ export default async function OrdersPage(props: {
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                      Customer
-                    </p>
-                    <p className="mt-1 text-sm text-neutral-700">
+                    <p className="field-label">Customer</p>
+                    <p className="mt-1 text-sm font-medium">
                       {order.customerEmail ||
                         order.guestEmail ||
                         "Guest checkout"}
@@ -157,10 +148,8 @@ export default async function OrdersPage(props: {
                   </div>
                   {order.shipping ? (
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                        Shipping
-                      </p>
-                      <p className="mt-1 text-sm text-neutral-700">
+                      <p className="field-label">Shipping</p>
+                      <p className="mt-1 text-sm font-medium">
                         {order.shipping.name || ""}
                         <br />
                         {order.shipping.line1}
@@ -187,10 +176,8 @@ export default async function OrdersPage(props: {
                     </div>
                   ) : null}
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                      Items
-                    </p>
-                    <p className="mt-1 text-sm text-neutral-700">
+                    <p className="field-label">Items</p>
+                    <p className="mt-1 text-sm font-medium">
                       {order.cartSnapshot.totalQuantity} items
                     </p>
                   </div>
@@ -200,17 +187,17 @@ export default async function OrdersPage(props: {
                   {order.cartSnapshot.lines.map((line) => (
                     <div
                       key={line.id}
-                      className="flex items-center justify-between gap-4 rounded-lg bg-neutral-50 p-3"
+                      className="flex items-center justify-between gap-4 rounded-2xl border-2 border-ink bg-cream p-3"
                     >
                       <div>
-                        <p className="font-medium text-neutral-900">
+                        <p className="font-bold">
                           {line.merchandise.product.title}
                         </p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="text-sm font-medium text-ink/60">
                           {line.merchandise.title} · Qty {line.quantity}
                         </p>
                       </div>
-                      <p className="text-sm font-medium text-neutral-900">
+                      <p className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-cream">
                         {formatOrderTotal(
                           line.cost.totalAmount.amount,
                           line.cost.totalAmount.currencyCode,
@@ -223,8 +210,8 @@ export default async function OrdersPage(props: {
             ))}
           </div>
         ) : (
-          <p className="mt-8 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
-            No matching guest order yet. Try the correct order ID or email.
+          <p className="mt-8 rounded-2xl border-2 border-ink bg-butter p-4 text-sm font-medium">
+            No matching order yet. Double-check the order ID or email.
           </p>
         )
       ) : null}

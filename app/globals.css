@@ -81,6 +81,26 @@ main {
   z-index: 0;
 }
 
+/* Shared building blocks so every page speaks the same visual language. */
+@utility card {
+  @apply rounded-[2rem] border-[3px] border-ink bg-white p-6 shadow-chunky md:p-8;
+}
+@utility field {
+  @apply w-full rounded-2xl border-2 border-ink bg-cream px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink/40 focus:bg-white focus:shadow-chunky-sm;
+}
+@utility field-label {
+  @apply mb-1.5 block text-xs font-bold uppercase tracking-[0.2em];
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border-[3px] border-ink bg-coral px-6 py-3 font-display text-lg uppercase tracking-wide text-ink shadow-chunky-sm transition-all hover:-translate-y-0.5 hover:shadow-chunky active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60;
+}
+@utility btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border-[3px] border-ink bg-white px-6 py-3 font-display text-lg uppercase tracking-wide text-ink transition-colors hover:bg-butter;
+}
+@utility eyebrow {
+  @apply text-xs font-bold uppercase tracking-[0.3em];
+}
+
 /* Subtle knit texture so flat colors feel woven, not digital. */
 .knit {
   background-image: radial-gradient(

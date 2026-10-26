@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import Grid from "components/grid";
 import ProductGridItems from "components/layout/product-grid-items";
+import PageHeader from "components/page-header";
 import Prose from "components/prose";
 import { defaultSort, sorting } from "lib/constants";
 import { getCollection, getCollectionProducts, getPage } from "lib/store";
@@ -46,13 +47,11 @@ export default async function Page(props: {
 
   if (page) {
     return (
-      <section className="px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 max-w-2xl space-y-3">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            {page.title}
-          </h1>
-          <Prose className="" html={page.body} />
-          <p className="text-sm italic">
+      <section className="mx-auto max-w-3xl px-4 pb-20">
+        <PageHeader eyebrow="Good to know" title={page.title} />
+        <div className="card space-y-6">
+          <Prose className="text-lg" html={page.body} />
+          <p className="text-sm font-medium text-ink/60">
             {`This document was last updated on ${new Intl.DateTimeFormat(
               undefined,
               {
@@ -80,19 +79,14 @@ export default async function Page(props: {
   });
 
   return (
-    <section className="px-4 sm:px-6 lg:px-8">
-      <div className="mb-6 max-w-2xl space-y-3">
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          {collection.title}
-        </h1>
-        {collection.description ? (
-          <p className="text-sm leading-6 text-neutral-600 dark:text-neutral-400">
-            {collection.description}
-          </p>
-        ) : null}
-      </div>
+    <section className="mx-auto max-w-7xl px-4 pb-20">
+      <PageHeader eyebrow="Collection" title={collection.title}>
+        {collection.description || null}
+      </PageHeader>
       {products.length === 0 ? (
-        <p className="py-3 text-lg">No products found in this collection</p>
+        <p className="card text-lg font-medium">
+          Nothing here yet. Check back soon!
+        </p>
       ) : (
         <div className="mx-auto max-w-7xl">
           <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">

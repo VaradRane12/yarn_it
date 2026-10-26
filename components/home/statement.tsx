@@ -1,6 +1,7 @@
 "use client";
 
 import { gsap } from "gsap";
+import Link from "next/link";
 import { useLayoutEffect, useRef } from "react";
 
 const TEXT =
@@ -52,6 +53,9 @@ export default function Statement() {
           </span>
         ))}
       </p>
+      <Link href="/about" className="btn-ghost mt-10">
+        Our story →
+      </Link>
     </section>
   );
 }

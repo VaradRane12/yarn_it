@@ -21,8 +21,9 @@ export async function Navbar() {
     .map((c) => ({ title: c.title, path: c.path }));
 
   const utilityMenu = [
-    { title: "Orders", path: "/orders" },
     { title: "Estimator", path: "/estimate" },
+    { title: "About", path: "/about" },
+    { title: "Orders", path: "/orders" },
   ];
 
   const menu = [

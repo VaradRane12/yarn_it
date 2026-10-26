@@ -6,12 +6,79 @@
  *
  * direct-Ollama path so the page doesn't completely break.
  */
-import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { isValidEmail, sendEmail } from "lib/email";
+import {
+  estimateEmailHtml,
+  estimateTitle,
+  type EstimateResult,
+} from "lib/estimate-email";
+import { after, NextResponse } from "next/server";
 
 const ESTIMATOR_URL =
   process.env.ESTIMATOR_API_URL ||
   `http://localhost:${process.env.ESTIMATOR_API_PORT || "8001"}`;
+
+// Waits for the estimator job server-side, so the email goes out even if the
+// customer closes the tab before the result shows.
+async function emailWhenDone(
+  jobId: string,
+  customerEmail: string,
+  imageUrl: string | null,
+) {
+  const deadline = Date.now() + 10 * 60_000;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    try {
+      const resp = await fetch(
+        `${ESTIMATOR_URL}/estimate/${encodeURIComponent(jobId)}`,
+      );
+      if (!resp.ok) continue;
+      const job = await resp.json();
+      if (job.status === "failed") {
+        console.warn(`[estimate] job ${jobId} failed, no email sent`);
+        return;
+      }
+      if (job.status !== "completed") continue;
+
+      const result = job.result as EstimateResult;
+      const title = estimateTitle(result);
+      const owner = process.env.NEXT_PUBLIC_OWNER_EMAIL;
+      await Promise.all([
+        customerEmail
+          ? sendEmail({
+              to: customerEmail,
+              subject: `Your Yarn it quote: ${title}`,
+              html: estimateEmailHtml({
+                result,
+                imageUrl,
+                customerEmail,
+                forOwner: false,
+              }),
+              replyTo: owner,
+            })
+          : null,
+        owner
+          ? sendEmail({
+              to: owner,
+              subject: `New estimate: ${title}${customerEmail ? ` from ${customerEmail}` : ""}`,
+              html: estimateEmailHtml({
+                result,
+                imageUrl,
+                customerEmail,
+                forOwner: true,
+              }),
+              replyTo: customerEmail || undefined,
+            })
+          : null,
+      ]);
+      return;
+    } catch (err) {
+      console.error(`[estimate] email polling error for ${jobId}:`, err);
+    }
+  }
+  console.warn(`[estimate] job ${jobId} timed out, no email sent`);
+}
 
 // ── Legacy fallback (direct Ollama — used if Python server is down) ───────────
 const OLLAMA_HOST = process.env.OLLAMA_HOST || "http://192.168.0.102:11434";
@@ -91,7 +158,8 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const image = formData.get("image");
     const dimensions = String(formData.get("dimensions") || "").trim();
-    const email = String(formData.get("email") || "").trim();
+    const rawEmail = String(formData.get("email") || "").trim();
+    const email = isValidEmail(rawEmail) ? rawEmail : "";
     const skipYoutube = formData.get("skip_youtube") === "true";
 
     if (!(image instanceof File)) {
@@ -129,14 +197,16 @@ export async function POST(request: Request) {
       }
 
       const data = await resp.json();
+      let imageUrl: string | null = null;
 
       // --- SUPABASE TRACKING LOGIC ---
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
       if (supabaseUrl && supabaseKey) {
         try {
           const supabase = createClient(supabaseUrl, supabaseKey);
-          const ext = image.name.split('.').pop() || 'jpg';
+          const ext = image.name.split(".").pop() || "jpg";
           const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
 
           const fileBuffer = await image.arrayBuffer();
@@ -149,7 +219,8 @@ export async function POST(request: Request) {
             const { data: publicUrlData } = supabase.storage
               .from("estimate_uploads")
               .getPublicUrl(uploadData.path);
-            
+            imageUrl = publicUrlData.publicUrl;
+
             await supabase.from("estimate_history").insert({
               email: email || null,
               image_url: publicUrlData.publicUrl,
@@ -165,11 +236,16 @@ export async function POST(request: Request) {
             if (oldRecords && oldRecords.length > 0) {
               const idsToDelete = oldRecords.map((r) => r.id);
               const filesToDelete = oldRecords.map((r) => {
-                const parts = r.image_url.split('/');
+                const parts = r.image_url.split("/");
                 return parts[parts.length - 1];
               });
-              await supabase.from("estimate_history").delete().in("id", idsToDelete);
-              await supabase.storage.from("estimate_uploads").remove(filesToDelete);
+              await supabase
+                .from("estimate_history")
+                .delete()
+                .in("id", idsToDelete);
+              await supabase.storage
+                .from("estimate_uploads")
+                .remove(filesToDelete);
             }
           } else {
             console.error("[estimate] Supabase upload error:", uploadErr);
@@ -178,11 +254,20 @@ export async function POST(request: Request) {
           console.error("[estimate] Supabase tracking failed:", supabaseErr);
         }
       } else {
-        console.warn("[estimate] Skipping Supabase tracking: Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+        console.warn(
+          "[estimate] Skipping Supabase tracking: Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY",
+        );
       }
 
+      if (data.job_id) after(() => emailWhenDone(data.job_id, email, imageUrl));
+
       // Return the job_id instantly
-      return NextResponse.json({ success: true, source: "python", job_id: data.job_id, status: data.status });
+      return NextResponse.json({
+        success: true,
+        source: "python",
+        job_id: data.job_id,
+        status: data.status,
+      });
     } catch (proxyErr) {
       console.warn(
         "[estimate] Python server unavailable, using legacy fallback:",

@@ -1,3 +1,4 @@
+import PageHeader from "components/page-header";
 import Link from "next/link";
 
 type Props = {
@@ -46,72 +47,70 @@ export default async function UpiCheckoutPage({ searchParams }: Props) {
     : "";
 
   return (
-    <div className="mx-auto max-w-xl px-6 py-12">
-      <h1 className="text-2xl font-semibold text-neutral-900">UPI Checkout</h1>
-      <p className="mt-2 text-neutral-600">
-        Complete payment using any UPI app (GPay, PhonePe, Paytm, BHIM).
-      </p>
+    <div className="mx-auto max-w-xl px-4 pb-20">
+      <PageHeader
+        eyebrow="Checkout · step 2 of 2"
+        title={
+          <>
+            Pay with <span className="text-outline">UPI</span>
+          </>
+        }
+      >
+        Use any UPI app: GPay, PhonePe, Paytm or BHIM.
+      </PageHeader>
 
-      <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <p className="text-sm text-neutral-500">Amount to pay</p>
-        <p className="mt-1 text-2xl font-bold text-neutral-900">
+      <div className="rounded-[2rem] border-[3px] border-ink bg-butter p-6 shadow-chunky md:p-8">
+        <p className="field-label">Amount to pay</p>
+        <p className="font-display text-6xl leading-none">
           {formatAmount(amount, currency)}
         </p>
         {orderId ? (
-          <p className="mt-2 text-sm text-neutral-600">Order ID: {orderId}</p>
+          <p className="mt-3 text-sm font-bold">Order ID: {orderId}</p>
         ) : null}
       </div>
 
       {!payeeVpa ? (
-        <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="mt-6 rounded-2xl border-2 border-ink bg-coral/30 p-4 text-sm font-medium">
           Set UPI_VPA in your environment to enable UPI payments.
         </div>
       ) : (
         <>
-          <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-neutral-500">UPI ID</p>
-            <p className="mt-1 font-medium text-neutral-900">{payeeVpa}</p>
+          <div className="card mt-6">
+            <p className="field-label">UPI ID</p>
+            <p className="font-bold">{payeeVpa}</p>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <a
-                href={upiUri}
-                className="rounded-full bg-rose-500 px-5 py-2 text-sm font-medium text-white"
-              >
+              <a href={upiUri} className="btn">
                 Open UPI App
               </a>
-              <a
-                href={upiUri}
-                className="rounded-full border border-neutral-300 px-5 py-2 text-sm"
-              >
+              <a href={upiUri} className="btn-ghost">
                 Copy/share UPI link
               </a>
             </div>
           </div>
 
-          <div className="mt-6 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <p className="mb-3 text-sm text-neutral-500">
-              Scan QR with your UPI app
-            </p>
+          <div className="card mt-6">
+            <p className="field-label mb-3">Scan QR with your UPI app</p>
             {qrSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={qrSrc}
                 alt="UPI payment QR code"
-                className="h-64 w-64 rounded border border-neutral-200"
+                className="h-64 w-64 rounded-2xl border-[3px] border-ink"
               />
             ) : null}
           </div>
         </>
       )}
 
-      <div className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
+      <div className="mt-6 rounded-2xl border-2 border-ink bg-mint p-4 text-sm font-medium">
         After payment, verify the transaction manually from your UPI app and
         your bank statement.
       </div>
 
       <div className="mt-6">
-        <Link href="/search" className="text-sm font-medium text-rose-600">
-          Continue shopping
+        <Link href="/search" className="btn-ghost">
+          ← Keep shopping
         </Link>
       </div>
     </div>
