@@ -38,69 +38,67 @@ export async function Navbar() {
           <MobileMenu menu={menu} />
         </Suspense>
       </div>
-      <div className="flex w-full items-center">
-        <div className="flex w-full md:flex-1 lg:w-1/3">
-          <Link
-            href="/"
-            prefetch={true}
-            className="mr-2 flex w-full items-center justify-center md:w-auto lg:mr-6"
-          >
-            <LogoIcon className="h-11 w-11" />
-            <div className="ml-2 flex-none font-display text-2xl uppercase tracking-wide">
-              {SITE_NAME}
-            </div>
-          </Link>
-          {menu.length ? (
-            <ul className="hidden gap-5 text-sm font-bold uppercase tracking-wider md:flex md:items-center">
-              <li>
+      <div className="flex w-full items-center gap-4 lg:gap-8">
+        <Link
+          href="/"
+          prefetch={true}
+          className="flex flex-1 items-center justify-center gap-2 md:flex-none"
+        >
+          <LogoIcon className="h-11 w-11 flex-none" />
+          <span className="whitespace-nowrap font-display text-2xl uppercase tracking-wide">
+            {SITE_NAME}
+          </span>
+        </Link>
+        {menu.length ? (
+          <ul className="hidden flex-none gap-1 whitespace-nowrap text-sm font-bold uppercase tracking-wider md:flex md:items-center lg:gap-3">
+            <li>
+              <Link
+                href="/search"
+                prefetch={true}
+                className="rounded-full px-2 py-1 transition-colors hover:bg-butter"
+              >
+                Products
+              </Link>
+            </li>
+            {categoryMenu.length ? (
+              <li className="group relative py-1">
+                <span className="cursor-default rounded-full px-2 py-1 transition-colors group-hover:bg-butter">
+                  Categories
+                </span>
+                <ul className="invisible absolute left-0 top-full z-30 min-w-48 rounded-2xl border-[3px] border-ink bg-cream p-2 opacity-0 shadow-chunky-sm transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 dark:border-neutral-800 dark:bg-black">
+                  {categoryMenu.map((item) => (
+                    <li key={item.title}>
+                      <Link
+                        href={item.path}
+                        prefetch={true}
+                        className="block rounded-xl px-3 py-2 hover:bg-lilac"
+                      >
+                        {item.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ) : null}
+            {utilityMenu.map((item) => (
+              <li key={item.title}>
                 <Link
-                  href="/search"
+                  href={item.path}
                   prefetch={true}
                   className="rounded-full px-2 py-1 transition-colors hover:bg-butter"
                 >
-                  Products
+                  {item.title}
                 </Link>
               </li>
-              {categoryMenu.length ? (
-                <li className="group relative py-1">
-                  <span className="cursor-default rounded-full px-2 py-1 transition-colors group-hover:bg-butter">
-                    Categories
-                  </span>
-                  <ul className="invisible absolute left-0 top-full z-30 min-w-48 rounded-2xl border-[3px] border-ink bg-cream p-2 opacity-0 shadow-chunky-sm transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 dark:border-neutral-800 dark:bg-black">
-                    {categoryMenu.map((item) => (
-                      <li key={item.title}>
-                        <Link
-                          href={item.path}
-                          prefetch={true}
-                          className="block rounded-xl px-3 py-2 hover:bg-lilac"
-                        >
-                          {item.title}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ) : null}
-              {utilityMenu.map((item) => (
-                <li key={item.title}>
-                  <Link
-                    href={item.path}
-                    prefetch={true}
-                    className="rounded-full px-2 py-1 transition-colors hover:bg-butter"
-                  >
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-        <div className="hidden justify-center lg:flex lg:w-1/3">
+            ))}
+          </ul>
+        ) : null}
+        <div className="ml-auto hidden w-full max-w-xs xl:block">
           <Suspense fallback={<SearchSkeleton />}>
             <Search />
           </Suspense>
         </div>
-        <div className="flex justify-end lg:w-1/3">
+        <div className="flex flex-none justify-end md:ml-auto xl:ml-0">
           <CartModal />
         </div>
       </div>
