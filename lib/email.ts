@@ -45,5 +45,8 @@ export async function sendEmail({
 
   if (!res.ok) {
     console.error(`[email] Resend ${res.status}: ${await res.text()}`);
+    return;
   }
+  const { id } = (await res.json()) as { id?: string };
+  console.log(`[email] sent "${subject}" (resend id ${id})`);
 }
