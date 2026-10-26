@@ -101,13 +101,10 @@ main {
   @apply text-xs font-bold uppercase tracking-[0.3em];
 }
 
-/* Subtle knit texture so flat colors feel woven, not digital. */
+/* Scattered yarn-ball and hook doodles; tile is 120x100 and repeats. */
 .knit {
-  background-image: radial-gradient(
-    rgba(29, 16, 40, 0.09) 1px,
-    transparent 1.2px
-  );
-  background-size: 14px 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='100'%3E%3Cg fill='none' stroke='%231d1028' stroke-opacity='0.16' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='25' cy='25' r='11'/%3E%3Cpath d='M16 19C22 23 28 23 34 19M15 27C22 32 29 32 35 27M20 15C24 22 24 30 20 35'/%3E%3Cpath d='M36 30C48 40 40 50 55 52'/%3E%3Cpath d='M80 62L100 88M98 86C102 84 103 89 100 91'/%3E%3Ccircle cx='85' cy='20' r='2.5'/%3E%3Ccircle cx='35' cy='80' r='2.5'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 120px 100px;
 }
 
 .text-outline {
