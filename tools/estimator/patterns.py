@@ -69,6 +69,21 @@ def _scrape_text(url: str, timeout: int = 8) -> str:
         return ""
 
 
+def _numbers(values) -> list[float]:
+    """Keep only numeric entries; the LLM sometimes returns nulls or text in lists."""
+    out = []
+    for v in values if isinstance(values, list) else []:
+        try:
+            out.append(float(v))
+        except (TypeError, ValueError):
+            pass
+    return out
+
+
+assert _numbers([350, None, "200", "n/a"]) == [350.0, 200.0]
+assert _numbers(None) == []
+
+
 def _extract_with_llm(text: str, url: str) -> dict:
     """
     Send scraped page text to Ollama and extract crochet data as JSON.
@@ -162,8 +177,8 @@ def search_patterns(keywords: str, max_results: int = 5) -> list[PatternInsights
                 yarn_meters=extracted.get("yarn_meters"),
                 hours_low=extracted.get("hours_low"),
                 hours_high=extracted.get("hours_high"),
-                inr_prices=[float(p) for p in extracted.get("inr_prices") or []],
-                usd_prices=[float(p) for p in extracted.get("usd_prices") or []],
+                inr_prices=_numbers(extracted.get("inr_prices")),
+                usd_prices=_numbers(extracted.get("usd_prices")),
             )
             all_insights.append(ins)
             print(f"[patterns] ✓ {domain:<35} "
