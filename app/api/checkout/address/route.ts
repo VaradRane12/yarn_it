@@ -4,6 +4,7 @@ import {
   MISSING_ORDERS_TABLE_HINT,
   MISSING_ORDERS_TABLE_MESSAGE,
 } from "lib/store/order-errors";
+import { createRazorpayOrder } from "lib/razorpay";
 import { NextResponse } from "next/server";
 
 function getSupabaseEnv() {
@@ -45,12 +46,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
 
+  if (cart.cost.totalAmount.currencyCode !== "INR") {
+    return NextResponse.json({ error: "Only INR payments are supported." }, { status: 400 });
+  }
+
   const orderId = `ord_${crypto.randomUUID().replace(/-/g, "")}`;
+  let rzpOrderId: string;
+  try {
+    rzpOrderId = (await createRazorpayOrder(Number(cart.cost.totalAmount.amount), orderId)).id;
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "Could not start payment." }, { status: 502 });
+  }
   const payload = {
     id: orderId,
     status: "pending",
-    payment_method: "upi",
+    payment_method: "razorpay",
     payment_status: "pending",
+    payment_reference: rzpOrderId,
     currency_code: cart.cost.totalAmount.currencyCode,
     total_amount: Number(cart.cost.totalAmount.amount),
     customer_email: email || null,
@@ -103,18 +116,11 @@ export async function POST(request: Request) {
     const proto = request.headers.get("x-forwarded-proto") || "http";
     const baseUrl = `${proto}://${host}`;
     
-    const redirectUrl = new URL(`/upi-checkout`, baseUrl);
-    redirectUrl.searchParams.set(
-      "amount",
-      String(cart.cost.totalAmount.amount),
-    );
-    redirectUrl.searchParams.set(
-      "currency",
-      cart.cost.totalAmount.currencyCode,
-    );
-    redirectUrl.searchParams.set("orderId", orderId);
+    const redirectUrl = new URL(`/checkout/pay`, baseUrl);
+    redirectUrl.searchParams.set("rzp", rzpOrderId);
+    redirectUrl.searchParams.set("amount", String(cart.cost.totalAmount.amount));
 
-    const output = NextResponse.redirect(redirectUrl);
+    const output = NextResponse.redirect(redirectUrl, 303);
     // set cookies for address so subsequent flows can reuse
     output.cookies.set("shippingName", name || "", {
       path: "/",
