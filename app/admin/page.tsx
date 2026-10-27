@@ -486,7 +486,7 @@ export default function AdminPage() {
                       {order.status} | payment: {order.payment_status}
                     </p>
                     <p className="text-xs text-neutral-500">
-                      {order.created_at}
+                      {new Date(order.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
