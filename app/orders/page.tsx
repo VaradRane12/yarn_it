@@ -85,7 +85,7 @@ export default async function OrdersPage(props: {
               name="orderId"
               defaultValue={orderId}
               className="field"
-              placeholder="ord_..."
+              placeholder="YI-ABC123"
             />
           </label>
           <label className="block sm:col-span-1">
@@ -113,7 +113,7 @@ export default async function OrdersPage(props: {
           </div>
         </form>
         <p className="mt-4 text-xs font-medium text-ink/60">
-          Your order ID is in your confirmation, e.g. ord_…
+          Your order ID is in your confirmation, e.g. YI-ABC123
         </p>
       </div>
 

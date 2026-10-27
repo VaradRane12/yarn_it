@@ -50,7 +50,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Only INR payments are supported." }, { status: 400 });
   }
 
-  const orderId = `ord_${crypto.randomUUID().replace(/-/g, "")}`;
+  // Short, easy to read out: no 0/O/1/I. 32^6 ≈ 1e9 ids, a PK clash just fails the insert.
+  const orderId = `YI-${Array.from(
+    crypto.getRandomValues(new Uint8Array(6)),
+    (b) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32],
+  ).join("")}`;
   let rzpOrderId: string;
   try {
     rzpOrderId = (await createRazorpayOrder(Number(cart.cost.totalAmount.amount), orderId)).id;

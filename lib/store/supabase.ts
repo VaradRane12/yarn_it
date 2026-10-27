@@ -476,7 +476,9 @@ export async function getOrdersFromSupabase(filter?: {
   });
 
   if (filter?.orderId) {
-    query.set("id", `eq.${filter.orderId}`);
+    // New ids are uppercase YI-XXXXXX; people type them in any case.
+    const id = filter.orderId.trim();
+    query.set("id", `eq.${/^yi-/i.test(id) ? id.toUpperCase() : id}`);
   }
 
   if (filter?.email) {
