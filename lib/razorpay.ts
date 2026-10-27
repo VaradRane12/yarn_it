@@ -78,11 +78,6 @@ export async function markOrderPaid(rzpOrderId: string, paymentId: string) {
   const [order] = (await res.json()) as Record<string, any>[];
   if (!order) return;
 
-  const owner = (process.env.NEXT_PUBLIC_OWNER_EMAIL || "").trim();
-  if (!isValidEmail(owner)) {
-    console.warn("[razorpay] NEXT_PUBLIC_OWNER_EMAIL missing/malformed, no order email");
-    return;
-  }
   const cart = order.cart_snapshot as Cart | undefined;
   const items = (cart?.lines || [])
     .map(
@@ -101,14 +96,31 @@ export async function markOrderPaid(rzpOrderId: string, paymentId: string) {
     .filter(Boolean)
     .map(esc)
     .join("<br>");
-  try {
-    await sendEmail({
-      to: owner,
-      subject: `New paid order ${order.id}: ₹${order.total_amount}`,
-      replyTo: isValidEmail(order.customer_email || "") ? order.customer_email : undefined,
-      html: `<h2>New paid order</h2><p><b>${esc(order.id)}</b> · ₹${esc(order.total_amount)} · payment ${esc(paymentId)}</p><ul>${items}</ul><p>${addr}</p><p>Customer: ${esc(order.customer_email || "no email")}</p>`,
-    });
-  } catch (e) {
-    console.error("[razorpay] owner email failed", e);
-  }
+  const owner = (process.env.NEXT_PUBLIC_OWNER_EMAIL || "").trim();
+  const customer = String(order.customer_email || order.guest_email || "").trim();
+  const body = `<p><b>${esc(order.id)}</b> · ₹${esc(order.total_amount)} · payment ${esc(paymentId)}</p><ul>${items}</ul><p>${addr}</p>`;
+  const mails = [];
+  if (isValidEmail(owner))
+    mails.push(
+      sendEmail({
+        to: owner,
+        subject: `New paid order ${order.id}: ₹${order.total_amount}`,
+        replyTo: isValidEmail(customer) ? customer : undefined,
+        html: `<h2>New paid order</h2>${body}<p>Customer: ${esc(customer || "no email")}</p>`,
+      }),
+    );
+  else console.warn("[razorpay] NEXT_PUBLIC_OWNER_EMAIL missing/malformed, no owner email");
+  if (isValidEmail(customer))
+    mails.push(
+      sendEmail({
+        to: customer,
+        subject: `Your Yarn it order ${order.id}`,
+        replyTo: isValidEmail(owner) ? owner : undefined,
+        html: `<h2>Thanks for your order!</h2><p>We've received your payment and will start on your order soon.</p>${body}`,
+      }),
+    );
+  // Emails must never fail the payment confirmation.
+  (await Promise.allSettled(mails)).forEach((r) => {
+    if (r.status === "rejected") console.error("[razorpay] email failed", r.reason);
+  });
 }
