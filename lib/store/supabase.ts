@@ -461,6 +461,7 @@ export async function getCatalogFromSupabase(): Promise<CatalogData> {
 
 export async function getOrdersFromSupabase(filter?: {
   email?: string;
+  phone?: string;
   orderId?: string;
 }): Promise<Order[]> {
   const { hasSupabaseConfig, supabaseUrl, supabaseKey } = getSupabaseEnv();
@@ -481,6 +482,10 @@ export async function getOrdersFromSupabase(filter?: {
   if (filter?.email) {
     const email = filter.email.trim().toLowerCase();
     query.set("or", `(customer_email.eq.${email},guest_email.eq.${email})`);
+  }
+
+  if (filter?.phone) {
+    query.set("shipping_phone", `eq.${filter.phone.trim()}`);
   }
 
   const response = await fetch(

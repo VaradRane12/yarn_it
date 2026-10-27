@@ -43,14 +43,18 @@ export default async function OrdersPage(props: {
   const email =
     typeof searchParams?.email === "string" ? searchParams.email.trim() : "";
 
+  const phone =
+    typeof searchParams?.phone === "string" ? searchParams.phone.trim() : "";
+
   let orders: Awaited<ReturnType<typeof getOrdersFromSupabase>> = [];
   let error: string | null = null;
 
-  if (orderId || email) {
+  if (orderId || email || phone) {
     try {
       orders = await getOrdersFromSupabase({
         orderId: orderId || undefined,
         email: email || undefined,
+        phone: phone || undefined,
       });
     } catch (fetchError) {
       error =
@@ -70,7 +74,7 @@ export default async function OrdersPage(props: {
           </>
         }
       >
-        Look up an order with its order ID, your email, or both.
+        Look up an order with its order ID, your email, your phone number, or any mix.
       </PageHeader>
 
       <div className="card">
@@ -93,6 +97,15 @@ export default async function OrdersPage(props: {
               placeholder="you@example.com"
             />
           </label>
+          <label className="block sm:col-span-1">
+            <span className="field-label">Phone</span>
+            <input
+              name="phone"
+              defaultValue={phone}
+              className="field"
+              placeholder="As entered at checkout"
+            />
+          </label>
           <div className="flex items-end sm:col-span-1">
             <button type="submit" className="btn w-full">
               Find my order
@@ -110,7 +123,7 @@ export default async function OrdersPage(props: {
         </p>
       ) : null}
 
-      {orderId || email ? (
+      {orderId || email || phone ? (
         orders.length ? (
           <div className="mt-8 space-y-4">
             {orders.map((order) => (
