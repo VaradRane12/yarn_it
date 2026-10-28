@@ -2,7 +2,9 @@ import { ReadonlyURLSearchParams } from "next/navigation";
 
 export const baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : "http://localhost:3000";
+  : process.env.SITE_URL
+    ? process.env.SITE_URL
+    : "http://localhost:3000";
 
 export const createUrl = (
   pathname: string,
@@ -20,32 +22,35 @@ export const ensureStartsWith = (stringToCheck: string, startsWith: string) =>
     : `${startsWith}${stringToCheck}`;
 
 export const validateEnvironmentVariables = () => {
-  const requiredEnvironmentVariables = [
-    "SHOPIFY_STORE_DOMAIN",
-    "SHOPIFY_STOREFRONT_ACCESS_TOKEN",
-  ];
-  const missingEnvironmentVariables = [] as string[];
+  const provider = (process.env.COMMERCE_PROVIDER || "local").toLowerCase();
 
-  requiredEnvironmentVariables.forEach((envVar) => {
+  if (provider !== "supabase") {
+    return;
+  }
+
+  const requiredForSupabase = ["NEXT_PUBLIC_SUPABASE_URL"];
+  const missingEnvironmentVariables: string[] = [];
+
+  requiredForSupabase.forEach((envVar) => {
     if (!process.env[envVar]) {
       missingEnvironmentVariables.push(envVar);
     }
   });
 
-  if (missingEnvironmentVariables.length) {
-    throw new Error(
-      `The following environment variables are missing. Your site will not work without them. Read more: https://vercel.com/docs/integrations/shopify#configure-environment-variables\n\n${missingEnvironmentVariables.join(
-        "\n",
-      )}\n`,
+  if (
+    !process.env.SUPABASE_SERVICE_ROLE_KEY &&
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    missingEnvironmentVariables.push(
+      "SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY",
     );
   }
 
-  if (
-    process.env.SHOPIFY_STORE_DOMAIN?.includes("[") ||
-    process.env.SHOPIFY_STORE_DOMAIN?.includes("]")
-  ) {
+  if (missingEnvironmentVariables.length) {
     throw new Error(
-      "Your `SHOPIFY_STORE_DOMAIN` environment variable includes brackets (ie. `[` and / or `]`). Your site will not work with them there. Please remove them.",
+      `Supabase provider is enabled but some environment variables are missing:\n\n${missingEnvironmentVariables.join(
+        "\n",
+      )}\n`,
     );
   }
 };

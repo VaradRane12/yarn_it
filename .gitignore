@@ -30,6 +30,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Supabase local temp files
+supabase/.temp/
+
 # vercel
 .vercel
 
@@ -37,3 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+__pycache__*
+tools/estimator/__pycache__
+.vscode/tools/downloaded_video.mp4
+tools/downloaded_video.mp4

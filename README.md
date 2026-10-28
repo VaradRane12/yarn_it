@@ -1,75 +1,97 @@
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fcommerce&project-name=commerce&repo-name=commerce&demo-title=Next.js%20Commerce&demo-url=https%3A%2F%2Fdemo.vercel.store&demo-image=https%3A%2F%2Fbigcommerce-demo-asset-ksvtgfvnd.vercel.app%2Fbigcommerce.png&env=COMPANY_NAME,SHOPIFY_REVALIDATION_SECRET,SHOPIFY_STORE_DOMAIN,SHOPIFY_STOREFRONT_ACCESS_TOKEN,SITE_NAME)
+# Crochet Shop
 
-# Next.js Commerce
+A lightweight Next.js storefront for a crochet shop.
 
-A high-performance, server-rendered Next.js App Router ecommerce application.
+It runs with either:
 
-This template uses React Server Components, Server Actions, `Suspense`, `useOptimistic`, and more.
+- `COMMERCE_PROVIDER=local` for built-in sample data
+- `COMMERCE_PROVIDER=supabase` for your own Supabase catalog
 
-<h3 id="v1-note"></h3>
-
-> Note: Looking for Next.js Commerce v1? View the [code](https://github.com/vercel/commerce/tree/v1), [demo](https://commerce-v1.vercel.store), and [release notes](https://github.com/vercel/commerce/releases/tag/v1).
-
-## Providers
-
-Vercel will only be actively maintaining a Shopify version [as outlined in our vision and strategy for Next.js Commerce](https://github.com/vercel/commerce/pull/966).
-
-Vercel is happy to partner and work with any commerce provider to help them get a similar template up and running and listed below. Alternative providers should be able to fork this repository and swap out the `lib/shopify` file with their own implementation while leaving the rest of the template mostly unchanged.
-
-- Shopify (this repository)
-- [BigCommerce](https://github.com/bigcommerce/nextjs-commerce) ([Demo](https://next-commerce-v2.vercel.app/))
-- [Ecwid by Lightspeed](https://github.com/Ecwid/ecwid-nextjs-commerce/) ([Demo](https://ecwid-nextjs-commerce.vercel.app/))
-- [Geins](https://github.com/geins-io/vercel-nextjs-commerce) ([Demo](https://geins-nextjs-commerce-starter.vercel.app/))
-- [Medusa](https://github.com/medusajs/vercel-commerce) ([Demo](https://medusa-nextjs-commerce.vercel.app/))
-- [Prodigy Commerce](https://github.com/prodigycommerce/nextjs-commerce) ([Demo](https://prodigy-nextjs-commerce.vercel.app/))
-- [Saleor](https://github.com/saleor/nextjs-commerce) ([Demo](https://saleor-commerce.vercel.app/))
-- [Shopware](https://github.com/shopwareLabs/vercel-commerce) ([Demo](https://shopware-vercel-commerce-react.vercel.app/))
-- [Swell](https://github.com/swellstores/verswell-commerce) ([Demo](https://verswell-commerce.vercel.app/))
-- [Umbraco](https://github.com/umbraco/Umbraco.VercelCommerce.Demo) ([Demo](https://vercel-commerce-demo.umbraco.com/))
-- [Wix](https://github.com/wix/headless-templates/tree/main/nextjs/commerce) ([Demo](https://wix-nextjs-commerce.vercel.app/))
-- [Fourthwall](https://github.com/FourthwallHQ/vercel-commerce) ([Demo](https://vercel-storefront.fourthwall.app/))
-
-> Note: Providers, if you are looking to use similar products for your demo, you can [download these assets](https://drive.google.com/file/d/1q_bKerjrwZgHwCw0ovfUMW6He9VtepO_/view?usp=sharing).
-
-## Integrations
-
-Integrations enable upgraded or additional functionality for Next.js Commerce
-
-- [Orama](https://github.com/oramasearch/nextjs-commerce) ([Demo](https://vercel-commerce.oramasearch.com/))
-
-  - Upgrades search to include typeahead with dynamic re-rendering, vector-based similarity search, and JS-based configuration.
-  - Search runs entirely in the browser for smaller catalogs or on a CDN for larger.
-
-- [React Bricks](https://github.com/ReactBricks/nextjs-commerce-rb) ([Demo](https://nextjs-commerce.reactbricks.com/))
-  - Edit pages, product details, and footer content visually using [React Bricks](https://www.reactbricks.com) visual headless CMS.
-
-## Running locally
-
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js Commerce. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/concepts/projects/environment-variables) for this, but a `.env` file is all that is necessary.
-
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control your Shopify store.
-
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+## Run locally
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Your app should now be running on [localhost:3000](http://localhost:3000/).
+## Production-like run
 
-<details>
-  <summary>Expand if you work at Vercel and want to run locally and / or contribute</summary>
+```bash
+pnpm build
+NODE_ENV=production pnpm start
+```
 
-1. Run `vc link`.
-1. Select the `Vercel Solutions` scope.
-1. Connect to the existing `commerce-shopify` project.
-1. Run `vc env pull` to get environment variables.
-1. Run `pnpm dev` to ensure everything is working correctly.
-</details>
+## Supabase seeding
 
-## Vercel, Next.js Commerce, and Shopify Integration Guide
+Seeding means inserting starter rows into the database so the storefront has content to show.
 
-You can use this comprehensive [integration guide](https://vercel.com/docs/integrations/ecommerce/shopify) with step-by-step instructions on how to configure Shopify as a headless CMS using Next.js Commerce as your headless Shopify storefront on Vercel.
+This repo includes:
+
+- `supabase/init.sql` to create tables
+- `supabase/seed.sql` to add sample products, collections, pages, and menus
+
+Run them in the Supabase SQL editor, or with the CLI:
+
+```bash
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase db query supabase/init.sql
+supabase db query supabase/seed.sql
+```
+
+`supabase/init.sql` now also creates an `orders` table used by the UPI checkout flow.
+
+## Env vars
+
+Use `.env.local` with these values when you want Supabase:
+
+```bash
+COMMERCE_PROVIDER=supabase
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+COMMERCE_REVALIDATION_SECRET=YOUR_RANDOM_SECRET
+SITE_URL=http://localhost:3000
+```
+
+If you want to skip Supabase while testing the app, set `COMMERCE_PROVIDER=local`.
+
+## Admin dashboard
+
+There is a minimal admin UI at `/admin` that lets you create products, collections, and pages.
+
+Protect it by setting `ADMIN_PASSWORD` in `.env.local`. The admin page sends the password to server endpoints which validate it before writing to Supabase.
+
+Use this workflow when testing:
+
+```bash
+# set ADMIN_PASSWORD in .env.local
+pnpm dev
+# open http://localhost:3000/admin
+```
+
+## UPI checkout
+
+This project now redirects checkout to a UPI payment page at `/upi-checkout`.
+
+Set these in `.env.local`:
+
+```bash
+UPI_VPA=yourname@bank
+UPI_PAYEE_NAME="Your Shop Name"
+UPI_TRANSACTION_NOTE="Order payment"
+```
+
+Flow:
+
+- User clicks checkout in cart
+- App creates a pending order in Supabase (if Supabase env is configured)
+- App opens `/upi-checkout` with the cart total and order ID
+- User pays via UPI app deep-link or QR
+
+Order confirmation:
+
+- Open `/admin`
+- Click `Load data`
+- In `Orders`, mark the order paid/pending/cancelled after manual verification
+
+Note: this is a manual confirmation flow. For automatic payment verification and order status updates, add a payment gateway webhook flow later.

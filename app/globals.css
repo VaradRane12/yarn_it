@@ -3,20 +3,113 @@
 @plugin "@tailwindcss/container-queries";
 @plugin "@tailwindcss/typography";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Yarn palette: loud pastels on warm cream, inked outlines. */
+@theme {
+  --color-ink: #1d1028;
+  --color-cream: #fff4e4;
+  --color-lilac: #b9a2ff;
+  --color-coral: #ff6f4f;
+  --color-butter: #ffd94f;
+  --color-mint: #74e4b5;
+  --color-sky: #72c6ff;
+  --color-bubblegum: #ff92c8;
+
+  --font-display: var(--font-anton), "Impact", sans-serif;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-chunky: 6px 6px 0 0 var(--color-ink);
+  --shadow-chunky-sm: 3px 3px 0 0 var(--color-ink);
+
+  --animate-marquee: marquee 28s linear infinite;
+  --animate-marquee-reverse: marquee 28s linear infinite reverse;
+  --animate-spin-slow: spin 14s linear infinite;
+  --animate-carousel: marquee 60s linear infinite;
+  --animate-fadeIn: fadeIn 0.4s ease-in forwards;
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
 @layer base {
   *,
   ::after,
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: var(--color-ink, currentColor);
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+html {
+  color-scheme: light;
+  background: var(--color-cream);
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  overflow-x: clip;
+}
+
+main {
+  position: relative;
+  z-index: 0;
+}
+
+/* Shared building blocks so every page speaks the same visual language. */
+@utility card {
+  @apply rounded-[2rem] border-[3px] border-ink bg-white p-6 shadow-chunky md:p-8;
+}
+@utility field {
+  @apply w-full rounded-2xl border-2 border-ink bg-cream px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink/40 focus:bg-white focus:shadow-chunky-sm;
+}
+@utility field-label {
+  @apply mb-1.5 block text-xs font-bold uppercase tracking-[0.2em];
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border-[3px] border-ink bg-coral px-6 py-3 font-display text-lg uppercase tracking-wide text-ink shadow-chunky-sm transition-all hover:-translate-y-0.5 hover:shadow-chunky active:translate-y-0 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60;
+}
+@utility btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border-[3px] border-ink bg-white px-6 py-3 font-display text-lg uppercase tracking-wide text-ink transition-colors hover:bg-butter;
+}
+@utility eyebrow {
+  @apply text-xs font-bold uppercase tracking-[0.3em];
+}
+
+/* Scattered yarn-ball and hook doodles; tile is 120x100 and repeats. */
+.knit {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='100'%3E%3Cg fill='none' stroke='%231d1028' stroke-opacity='0.16' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='25' cy='25' r='11'/%3E%3Cpath d='M16 19C22 23 28 23 34 19M15 27C22 32 29 32 35 27M20 15C24 22 24 30 20 35'/%3E%3Cpath d='M36 30C48 40 40 50 55 52'/%3E%3Cpath d='M80 62L100 88M98 86C102 84 103 89 100 91'/%3E%3Ccircle cx='85' cy='20' r='2.5'/%3E%3Ccircle cx='35' cy='80' r='2.5'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 120px 100px;
+}
+
+.text-outline {
+  -webkit-text-stroke: 2px var(--color-ink);
+  color: transparent;
 }
 
 @supports (font: -apple-system-body) and (-webkit-appearance: none) {
@@ -28,5 +121,14 @@
 a,
 input,
 button {
-  @apply focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-50 dark:focus-visible:ring-neutral-600 dark:focus-visible:ring-offset-neutral-900;
+  @apply focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-cream;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

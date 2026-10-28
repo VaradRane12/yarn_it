@@ -1,4 +1,4 @@
-import { getCollection, getCollectionProducts } from "lib/shopify";
+import { getCollection, getCollectionProducts } from "lib/store";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -38,14 +38,31 @@ export default async function CategoryPage(props: {
     reverse,
   });
 
+  const collection = await getCollection(params.collection);
+
+  if (!collection) return notFound();
+
   return (
-    <section>
+    <section className="px-4 sm:px-6 lg:px-8">
+      <div className="mb-6 max-w-2xl space-y-3">
+        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          {collection.title}
+        </h1>
+        {collection.description ? (
+          <p className="text-sm leading-6 text-neutral-600 dark:text-neutral-400">
+            {collection.description}
+          </p>
+        ) : null}
+      </div>
+
       {products.length === 0 ? (
         <p className="py-3 text-lg">{`No products found in this collection`}</p>
       ) : (
-        <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <ProductGridItems products={products} />
-        </Grid>
+        <div className="mx-auto max-w-7xl">
+          <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <ProductGridItems products={products} />
+          </Grid>
+        </div>
       )}
     </section>
   );
