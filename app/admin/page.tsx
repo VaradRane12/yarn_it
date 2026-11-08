@@ -566,6 +566,28 @@ export default function AdminPage() {
                         {editingProductId === p.id ? "Close" : "Edit"}
                       </button>
                       <button
+                        className="rounded border border-neutral-300 px-3 py-1"
+                        onClick={async () => {
+                          if (!confirm("Post to Instagram?")) return;
+                          setStatus("posting to instagram...");
+                          const res = await fetch("/api/admin/instagram", {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "x-admin-password": adminPassword,
+                            },
+                            body: JSON.stringify({ id: p.id }),
+                          });
+                          const data = await res.json().catch(() => ({}));
+                          setStatus(
+                            res.ok ? "posted to instagram" : data.error || "instagram failed",
+                          );
+                        }}
+                        type="button"
+                      >
+                        Instagram
+                      </button>
+                      <button
                         className="rounded bg-red-500 px-3 py-1 text-white"
                         onClick={async () => {
                           if (!confirm("Delete product?")) return;
