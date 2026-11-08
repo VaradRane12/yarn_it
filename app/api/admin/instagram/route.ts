@@ -18,42 +18,77 @@ const graph = async (path: string, params: Record<string, string>) => {
 
 export async function POST(request: Request) {
   const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword || request.headers.get("x-admin-password") !== adminPassword)
+  if (
+    !adminPassword ||
+    request.headers.get("x-admin-password") !== adminPassword
+  )
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const igId = process.env.INSTAGRAM_USER_ID;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!igId || !process.env.INSTAGRAM_ACCESS_TOKEN || !supabaseUrl || !supabaseKey)
-    return NextResponse.json({ error: "Instagram not configured" }, { status: 500 });
+  if (
+    !igId ||
+    !process.env.INSTAGRAM_ACCESS_TOKEN ||
+    !supabaseUrl ||
+    !supabaseKey
+  )
+    return NextResponse.json(
+      { error: "Instagram not configured" },
+      { status: 500 },
+    );
 
-  const { id } = await request.json();
-  const res = await fetch(
-    `${supabaseUrl.replace(/\/$/, "")}/rest/v1/products?id=eq.${encodeURIComponent(id)}&select=title,handle,description,featured_image,price_range`,
-    { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } },
-  );
-  const product = (await res.json())?.[0];
-  if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  const body = await request.json();
+  let imageUrl: string = body.imageUrl || "";
+  let caption: string = body.caption || "";
 
-  const imageUrl: string = product.featured_image?.url || "";
+  if (body.id) {
+    const res = await fetch(
+      `${supabaseUrl.replace(/\/$/, "")}/rest/v1/products?id=eq.${encodeURIComponent(body.id)}&select=title,handle,description,featured_image,price_range`,
+      {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+      },
+    );
+    const product = (await res.json())?.[0];
+    if (!product)
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    imageUrl ||= product.featured_image?.url || "";
+    if (!caption) {
+      const price = product.price_range?.maxVariantPrice?.amount;
+      caption = [
+        product.title,
+        product.description?.replace(/<[^>]+>/g, ""),
+        price ? `₹${Number(price).toFixed(0)}` : "",
+        `${baseUrl}/product/${product.handle}`,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+    }
+  }
+
   // Instagram fetches the image itself, so it must be absolute and public.
   if (!imageUrl.startsWith("http"))
-    return NextResponse.json({ error: "Product image is not a public URL" }, { status: 400 });
-
-  const price = product.price_range?.minVariantPrice?.amount;
-  const caption = [
-    product.title,
-    product.description,
-    price ? `₹${Number(price).toFixed(0)}` : "",
-    `${baseUrl}/product/${product.handle}`,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+    return NextResponse.json(
+      { error: "Image is not a public URL" },
+      { status: 400 },
+    );
+  if (caption.length > 2200)
+    return NextResponse.json(
+      { error: "Caption over 2200 characters" },
+      { status: 400 },
+    );
 
   try {
-    const container = await graph(`${igId}/media`, { image_url: imageUrl, caption });
+    const container = await graph(`${igId}/media`, {
+      image_url: imageUrl,
+      caption,
+    });
     // The container can take a moment to process; retry the publish once.
-    const publish = () => graph(`${igId}/media_publish`, { creation_id: container.id });
+    const publish = () =>
+      graph(`${igId}/media_publish`, { creation_id: container.id });
     const post = await publish().catch(async () => {
       await new Promise((r) => setTimeout(r, 3000));
       return publish();
