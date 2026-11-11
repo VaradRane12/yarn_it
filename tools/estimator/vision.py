@@ -29,6 +29,8 @@ def describe_item(image_bytes: bytes) -> str:
     from io import BytesIO
     with Image.open(BytesIO(image_bytes)) as img:
         img = img.convert("RGB")
+        # Qwen3-VL turns big images into many tokens; full-size phone photos overflow the 4096 context.
+        img.thumbnail((1024, 1024))
         out = BytesIO()
         img.save(out, format="JPEG")
         jpg_bytes = out.getvalue()
