@@ -1,3 +1,4 @@
+import { GENERIC_ESTIMATE_ERROR } from "lib/estimate-failure";
 import { NextResponse } from "next/server";
 
 const ESTIMATOR_URL =
@@ -37,18 +38,16 @@ export async function GET(request: Request) {
       return NextResponse.json({
         success: false,
         status: "failed",
-        error: data.error,
+        error: GENERIC_ESTIMATE_ERROR,
       });
     } else {
       // still pending
       return NextResponse.json({ success: true, status: "pending" });
     }
   } catch (error) {
+    console.error("[estimate/status] error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Status check failed",
-      },
+      { success: false, error: GENERIC_ESTIMATE_ERROR },
       { status: 500 },
     );
   }

@@ -14,6 +14,11 @@ import {
   estimateTitle,
   type EstimateResult,
 } from "lib/estimate-email";
+import {
+  GENERIC_ESTIMATE_ERROR,
+  reportEstimateFailure,
+  type FailureContext,
+} from "lib/estimate-failure";
 import { after, NextResponse } from "next/server";
 
 const ESTIMATOR_URL =
@@ -27,6 +32,7 @@ async function emailWhenDone(
   customerEmail: string,
   imageUrl: string | null,
   notes: string,
+  failure: Omit<FailureContext, "step" | "error" | "jobId">,
 ) {
   const deadline = Date.now() + 10 * 60_000;
   while (Date.now() < deadline) {
@@ -38,7 +44,13 @@ async function emailWhenDone(
       if (!resp.ok) continue;
       const job = await resp.json();
       if (job.status === "failed") {
-        console.warn(`[estimate] job ${jobId} failed, no email sent`);
+        await reportEstimateFailure({
+          ...failure,
+          jobId,
+          step: job.failed_step || "unknown",
+          error: String(job.error || "unknown error"),
+          models: job.models,
+        });
         return;
       }
       if (job.status !== "completed") continue;
@@ -86,7 +98,13 @@ async function emailWhenDone(
       console.error(`[estimate] email polling error for ${jobId}:`, err);
     }
   }
-  console.warn(`[estimate] job ${jobId} timed out, no email sent`);
+  await reportEstimateFailure({
+    ...failure,
+    jobId,
+    step: "timeout",
+    error:
+      "Job did not complete within 10 minutes (or estimator became unreachable)",
+  });
 }
 
 // ── Legacy fallback (direct Ollama — used if Python server is down) ───────────
@@ -182,6 +200,21 @@ export async function POST(request: Request) {
       );
     }
 
+    const failure = {
+      customerEmail: email,
+      dimensions,
+      notes,
+      image: {
+        name: image.name,
+        type: image.type,
+        size: image.size,
+        base64:
+          image.size < 5_000_000
+            ? Buffer.from(await image.arrayBuffer()).toString("base64")
+            : undefined,
+      },
+    };
+
     // Log the quote request server-side so you can follow up
     if (email) {
       console.log(
@@ -275,7 +308,9 @@ export async function POST(request: Request) {
       }
 
       if (data.job_id)
-        after(() => emailWhenDone(data.job_id, email, imageUrl, notes));
+        after(() =>
+          emailWhenDone(data.job_id, email, imageUrl, notes, failure),
+        );
 
       // Return the job_id instantly
       return NextResponse.json({
@@ -290,14 +325,24 @@ export async function POST(request: Request) {
         proxyErr,
       );
       // Legacy fallback blocks for 60s, so it might timeout if abused, but it's just a fallback.
-      return await legacyEstimate(image, dimensions);
+      try {
+        return await legacyEstimate(image, dimensions);
+      } catch (legacyErr) {
+        await reportEstimateFailure({
+          ...failure,
+          step: "estimator unreachable / timeout",
+          error: `Estimator: ${proxyErr}\nLegacy Ollama fallback: ${legacyErr}`,
+        });
+        return NextResponse.json(
+          { success: false, error: GENERIC_ESTIMATE_ERROR },
+          { status: 502 },
+        );
+      }
     }
   } catch (error) {
+    console.error("[estimate] unexpected error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Estimation failed",
-      },
+      { success: false, error: GENERIC_ESTIMATE_ERROR },
       { status: 500 },
     );
   }

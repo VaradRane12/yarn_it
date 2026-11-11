@@ -19,8 +19,8 @@ import json
 import uuid
 from typing import Optional
 
-from config import API_PORT
-from vision import describe_and_extract
+from config import API_PORT, VISION_MODEL, TEXT_MODEL
+from vision import describe_item, extract_keywords
 from youtube import search_youtube_tutorials
 from patterns import search_patterns
 from aggregator import aggregate
@@ -56,14 +56,20 @@ def settings_defaults() -> dict:
 jobs = {}
 
 def process_estimate_job(job_id: str, image_bytes: bytes, dimensions: str, skip_youtube: bool, pricing: Optional[dict] = None):
+    step = "vision"
     try:
-        description, keywords = describe_and_extract(image_bytes)
+        description = describe_item(image_bytes)
+        step = "keywords"
+        keywords = extract_keywords(description)
 
         yt_insights = []
         if not skip_youtube:
+            step = "YouTube"
             yt_insights = search_youtube_tutorials(keywords)
 
+        step = "patterns"
         pat_insights = search_patterns(keywords)
+        step = "pricing"
         agg = aggregate(keywords, description, dimensions, yt_insights, pat_insights)
         result: PriceBreakdown = calculate_price(agg, pricing)
 
@@ -100,6 +106,8 @@ def process_estimate_job(job_id: str, image_bytes: bytes, dimensions: str, skip_
         traceback.print_exc()
         jobs[job_id]["status"] = "failed"
         jobs[job_id]["error"] = str(e)
+        jobs[job_id]["failed_step"] = step
+        jobs[job_id]["models"] = {"vision": VISION_MODEL, "text": TEXT_MODEL}
 
 
 @app.post("/estimate")

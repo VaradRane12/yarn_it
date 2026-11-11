@@ -145,20 +145,8 @@ export default function EstimatePage() {
         setResult(json);
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Something went wrong";
-      if (
-        msg.includes("500") ||
-        msg.includes("timeout") ||
-        msg.includes("Failed to fetch") ||
-        msg.includes("Ollama failed") ||
-        msg.includes("Errno 60")
-      ) {
-        setError(
-          "The estimator is currently unavailable for a short bit while the server syncs. It will be back shortly!",
-        );
-      } else {
-        setError(msg);
-      }
+      console.error("[estimate]", err);
+      setError("A server error occurred. Please check back later.");
     } finally {
       setLoading(false);
     }

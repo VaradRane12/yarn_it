@@ -16,11 +16,13 @@ export async function sendEmail({
   subject,
   html,
   replyTo,
+  attachments,
 }: {
   to: string;
   subject: string;
   html: string;
   replyTo?: string;
+  attachments?: { filename: string; content: string }[]; // content is base64
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -40,6 +42,7 @@ export async function sendEmail({
       subject,
       html,
       ...(replyTo ? { reply_to: replyTo } : {}),
+      ...(attachments ? { attachments } : {}),
     }),
   });
 
