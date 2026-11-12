@@ -2,7 +2,7 @@
 
 import EstimatorPricing from "components/admin/estimator-pricing";
 import { DEFAULT_CURRENCY_CODE } from "lib/constants";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 type AdminImage = {
@@ -497,6 +497,7 @@ export default function AdminPage() {
         {tab === "orders" ? (
           <OrdersTab
             api={api}
+            adminPassword={adminPassword}
             notify={notify}
             orders={orders}
             reload={loadAll}
@@ -1151,15 +1152,19 @@ const ORDER_FILTERS = ["all", "pending", "paid", "cancelled"] as const;
 
 function OrdersTab({
   api,
+  adminPassword,
   notify,
   orders,
   reload,
 }: {
   api: Api;
+  adminPassword: string;
   notify: Toast;
   orders: any[];
   reload: () => Promise<void>;
 }) {
+  const [sendFor, setSendFor] = useState("");
+  const photoInput = useRef<HTMLInputElement>(null);
   const [filter, setFilter] = useState<(typeof ORDER_FILTERS)[number]>("all");
   const [query, setQuery] = useState("");
 
@@ -1173,6 +1178,21 @@ function OrdersTab({
           .includes(q))
     );
   });
+
+  async function sendPhoto(file: File | undefined) {
+    const id = sendFor;
+    setSendFor("");
+    if (!file || !id) return;
+    try {
+      const { url: photo } = await uploadAdminImage(file, adminPassword);
+      const res = await api("order", "POST", { id, photo });
+      if (!res.ok) return notify(res.data?.error || "Could not send", "error");
+      notify("Photo and balance link emailed");
+      await reload();
+    } catch {
+      notify("Upload failed", "error");
+    }
+  }
 
   async function balanceLink(id: string) {
     const res = await api("order", "POST", { id });
@@ -1193,6 +1213,16 @@ function OrdersTab({
 
   return (
     <div>
+      <input
+        ref={photoInput}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          sendPhoto(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {ORDER_FILTERS.map((f) => (
           <button
@@ -1312,6 +1342,18 @@ function OrdersTab({
                       onClick={() => balanceLink(o.id)}
                     >
                       Balance link (₹{o.balance_amount})
+                    </button>
+                  ) : null}
+                  {["deposit_paid", "balance_pending"].includes(o.payment_status) ? (
+                    <button
+                      className={btnGhost}
+                      type="button"
+                      onClick={() => {
+                        setSendFor(o.id);
+                        photoInput.current?.click();
+                      }}
+                    >
+                      Email photo + link
                     </button>
                   ) : null}
                   {o.status !== "paid" ? (

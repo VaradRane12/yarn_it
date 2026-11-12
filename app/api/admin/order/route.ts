@@ -3,6 +3,7 @@ import {
   MISSING_ORDERS_TABLE_HINT,
   MISSING_ORDERS_TABLE_MESSAGE,
 } from "lib/store/order-errors";
+import { isValidEmail, sendEmail } from "lib/email";
 import { createRazorpayOrder } from "lib/razorpay";
 import { NextResponse } from "next/server";
 
@@ -111,13 +112,16 @@ export async function POST(request: Request) {
   const { supabaseUrl, supabaseKey } = getSupabaseEnv();
   if (!supabaseUrl || !supabaseKey)
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
-  const { id } = await request.json().catch(() => ({}));
+  const { id, photo } = await request.json().catch(() => ({}));
   const base = `${supabaseUrl.replace(/\/$/, "")}/rest/v1/orders?id=eq.${encodeURIComponent(id || "")}`;
   const h = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
-  const [order] = await (await fetch(`${base}&select=payment_status,balance_amount`, { headers: h, cache: "no-store" })).json();
+  const [order] = await (await fetch(`${base}&select=payment_status,balance_amount,customer_email,guest_email`, { headers: h, cache: "no-store" })).json();
   const due = Number(order?.balance_amount);
   if (!order || !["deposit_paid", "balance_pending"].includes(order.payment_status) || !(due > 0))
     return NextResponse.json({ error: "No balance due" }, { status: 400 });
+  const email = String(order.customer_email || order.guest_email || "").trim();
+  if (photo && !isValidEmail(email))
+    return NextResponse.json({ error: "Order has no customer email" }, { status: 400 });
   const rzp = await createRazorpayOrder(due, id).catch(() => null);
   if (!rzp) return NextResponse.json({ error: "Could not start payment" }, { status: 502 });
   const res = await fetch(base, {
@@ -127,5 +131,15 @@ export async function POST(request: Request) {
   });
   if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: 500 });
   const origin = new URL(request.url).origin;
-  return NextResponse.json({ url: `${origin}/checkout/pay?rzp=${rzp.id}&amount=${due}` });
+  const url = `${origin}/checkout/pay?rzp=${rzp.id}&amount=${due}`;
+  // With a photo: email the customer the finished piece and the pay link.
+  if (photo) {
+    await sendEmail({
+      to: email,
+      subject: `Your Yarn it order ${id} is ready`,
+      replyTo: process.env.NEXT_PUBLIC_OWNER_EMAIL,
+      html: `<h2>Your order is ready!</h2><p><img src="${encodeURI(String(photo))}" alt="Your finished order" style="max-width:100%;border-radius:12px"></p><p>Pay the remaining <b>₹${due}</b> and we will ship it.</p><p><a href="${url}" style="background:#111;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none">Pay ₹${due}</a></p>`,
+    });
+  }
+  return NextResponse.json({ url, emailed: !!photo });
 }
