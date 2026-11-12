@@ -62,21 +62,26 @@ function supabase() {
  */
 export async function markOrderPaid(rzpOrderId: string, paymentId: string) {
   const { url, headers } = supabase();
-  const res = await fetch(
-    `${url}/orders?payment_reference=eq.${encodeURIComponent(rzpOrderId)}&payment_status=neq.paid`,
-    {
-      method: "PATCH",
-      headers: { ...headers, "Content-Type": "application/json", Prefer: "return=representation" },
-      body: JSON.stringify({
-        payment_status: "paid",
-        payment_reference: paymentId,
-        updated_at: new Date().toISOString(),
-      }),
-    },
-  );
+  const where = `payment_reference=eq.${encodeURIComponent(rzpOrderId)}`;
+  const cur = (await (await fetch(`${url}/orders?${where}&select=payment_status,balance_amount`, { headers })).json()) as Record<string, any>[];
+  const c = cur[0];
+  if (!c || c.payment_status === "paid") return;
+  // First payment of an order with a balance is the deposit; any later one settles it.
+  const next = c.payment_status === "pending" && Number(c.balance_amount) > 0 ? "deposit_paid" : "paid";
+  const res = await fetch(`${url}/orders?${where}&payment_status=eq.${c.payment_status}`, {
+    method: "PATCH",
+    headers: { ...headers, "Content-Type": "application/json", Prefer: "return=representation" },
+    body: JSON.stringify({
+      payment_status: next,
+      payment_reference: paymentId,
+      ...(next === "paid" ? { balance_amount: 0 } : {}),
+      updated_at: new Date().toISOString(),
+    }),
+  });
   if (!res.ok) throw new Error(`markOrderPaid failed: ${await res.text()}`);
   const [order] = (await res.json()) as Record<string, any>[];
   if (!order) return;
+  const label = next === "paid" ? "paid" : `deposit paid, ₹${order.balance_amount} due before shipping`;
 
   const cart = order.cart_snapshot as Cart | undefined;
   const items = (cart?.lines || [])
@@ -104,9 +109,9 @@ export async function markOrderPaid(rzpOrderId: string, paymentId: string) {
     mails.push(
       sendEmail({
         to: owner,
-        subject: `New paid order ${order.id}: ₹${order.total_amount}`,
+        subject: `Order ${order.id} ${label}: ₹${order.total_amount}`,
         replyTo: isValidEmail(customer) ? customer : undefined,
-        html: `<h2>New paid order</h2>${body}<p>Customer: ${esc(customer || "no email")}</p>`,
+        html: `<h2>Order ${esc(label)}</h2>${body}<p>Customer: ${esc(customer || "no email")}</p>`,
       }),
     );
   else console.warn("[razorpay] NEXT_PUBLIC_OWNER_EMAIL missing/malformed, no owner email");
@@ -116,11 +121,12 @@ export async function markOrderPaid(rzpOrderId: string, paymentId: string) {
         to: customer,
         subject: `Your Yarn it order ${order.id}`,
         replyTo: isValidEmail(owner) ? owner : undefined,
-        html: `<h2>Thanks for your order!</h2><p>We've received your payment and will start on your order soon.</p>${body}`,
+        html: `<h2>Thanks for your order!</h2><p>We've received your payment and will start on your order soon.${next === "paid" ? "" : ` The remaining ₹${esc(order.balance_amount)} is due before we ship; we'll send you a payment link.`}</p>${body}`,
       }),
     );
   // Emails must never fail the payment confirmation.
   (await Promise.allSettled(mails)).forEach((r) => {
     if (r.status === "rejected") console.error("[razorpay] email failed", r.reason);
   });
+  return next;
 }

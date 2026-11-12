@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS orders (
   total_amount NUMERIC(12, 2),
   cart_snapshot JSONB,
   payment_reference TEXT,
+  balance_amount NUMERIC(12, 2) DEFAULT 0, -- still owed after the 50% deposit
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -122,3 +123,5 @@ CREATE POLICY "Public Access"
 CREATE POLICY "Authenticated Insert"
   ON storage.objects FOR INSERT
   WITH CHECK (bucket_id = 'estimate_uploads');
+
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS balance_amount NUMERIC(12, 2) DEFAULT 0;
