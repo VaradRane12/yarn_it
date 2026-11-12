@@ -26,6 +26,10 @@ export function ProductDescription({ product }: { product: Product }) {
         />
       ) : null}
       <AddToCart product={product} />
+      <ul className="mt-6 space-y-1 text-sm font-medium">
+        <li>✓ UPI and cards accepted</li>
+        <li>✓ Half pay: pay 50% now, the rest before we ship</li>
+      </ul>
     </>
   );
 }

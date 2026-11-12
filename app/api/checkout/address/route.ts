@@ -50,9 +50,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Only INR payments are supported." }, { status: 400 });
   }
 
-  // Made to order: 50% now, the rest before shipping.
+  // Made to order: customer picks 50% now (rest before shipping) or everything now.
   const total = Number(cart.cost.totalAmount.amount);
-  const deposit = Math.ceil(total / 2);
+  const deposit = form.get("pay") === "full" ? total : Math.ceil(total / 2);
 
   // Short, easy to read out: no 0/O/1/I. 32^6 ≈ 1e9 ids, a PK clash just fails the insert.
   const orderId = `YI-${Array.from(
@@ -128,6 +128,7 @@ export async function POST(request: Request) {
     const redirectUrl = new URL(`/checkout/pay`, baseUrl);
     redirectUrl.searchParams.set("rzp", rzpOrderId);
     redirectUrl.searchParams.set("amount", String(deposit));
+    redirectUrl.searchParams.set("balance", String(total - deposit));
 
     const output = NextResponse.redirect(redirectUrl, 303);
     // set cookies for address so subsequent flows can reuse

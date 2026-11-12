@@ -67,6 +67,7 @@ export async function markOrderPaid(rzpOrderId: string, paymentId: string) {
   const c = cur[0];
   if (!c || c.payment_status === "paid") return;
   // First payment of an order with a balance is the deposit; any later one settles it.
+  const wasBalance = c.payment_status === "balance_pending";
   const next = c.payment_status === "pending" && Number(c.balance_amount) > 0 ? "deposit_paid" : "paid";
   const res = await fetch(`${url}/orders?${where}&payment_status=eq.${c.payment_status}`, {
     method: "PATCH",
@@ -128,5 +129,5 @@ export async function markOrderPaid(rzpOrderId: string, paymentId: string) {
   (await Promise.allSettled(mails)).forEach((r) => {
     if (r.status === "rejected") console.error("[razorpay] email failed", r.reason);
   });
-  return next;
+  return wasBalance ? "balance_paid" : next;
 }

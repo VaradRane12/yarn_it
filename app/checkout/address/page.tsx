@@ -90,6 +90,24 @@ export default function AddressPage() {
             <input name="phone" className="field" placeholder="Mobile number" />
           </label>
 
+          <fieldset className="space-y-2">
+            <legend className="field-label">Payment</legend>
+            <label className="flex items-start gap-2 text-sm font-medium">
+              <input type="radio" name="pay" value="half" defaultChecked className="mt-1" />
+              <span>
+                Pay 50% now
+                <span className="block font-normal text-ink/60">
+                  Every piece is made to order. The other half is due once it is
+                  ready, before we ship. We will send you a payment link then.
+                </span>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 text-sm font-medium">
+              <input type="radio" name="pay" value="full" className="mt-1" />
+              <span>Pay in full now</span>
+            </label>
+          </fieldset>
+
           <div className="flex items-center justify-end">
             <button type="submit" className="btn w-full sm:w-auto">
               Continue to payment

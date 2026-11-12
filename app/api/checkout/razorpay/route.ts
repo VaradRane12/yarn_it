@@ -14,6 +14,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
   const status = await markOrderPaid(orderId, paymentId);
-  if (status === "deposit_paid") await createCart(); // fresh empty cart replaces the paid one
+  if (status && status !== "balance_paid") await createCart(); // fresh empty cart replaces the paid one
   return NextResponse.json({ ok: true });
 }
