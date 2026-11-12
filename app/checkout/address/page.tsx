@@ -30,10 +30,11 @@ export default function AddressPage() {
           </label>
 
           <label className="block">
-            <span className="field-label">Email (optional)</span>
+            <span className="field-label">Email</span>
             <input
               name="email"
               type="email"
+              required
               className="field"
               placeholder="you@example.com"
             />
@@ -86,8 +87,8 @@ export default function AddressPage() {
           </div>
 
           <label className="block">
-            <span className="field-label">Phone (optional)</span>
-            <input name="phone" className="field" placeholder="Mobile number" />
+            <span className="field-label">Mobile number</span>
+            <input name="phone" type="tel" required className="field" placeholder="Mobile number" />
           </label>
 
           <fieldset className="space-y-2">

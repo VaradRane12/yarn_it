@@ -4,6 +4,7 @@ import {
   MISSING_ORDERS_TABLE_HINT,
   MISSING_ORDERS_TABLE_MESSAGE,
 } from "lib/store/order-errors";
+import { isValidEmail } from "lib/email";
 import { createRazorpayOrder } from "lib/razorpay";
 import { NextResponse } from "next/server";
 
@@ -26,9 +27,9 @@ export async function POST(request: Request) {
   const country = String(form.get("country") || "").trim();
   const phone = String(form.get("phone") || "").trim() || null;
 
-  if (!line1 || !city || !postalCode || !country) {
+  if (!email || !isValidEmail(email) || !phone || !line1 || !city || !postalCode || !country) {
     return NextResponse.json(
-      { error: "Please provide a valid address." },
+      { error: "Please fill in email, mobile and a valid address." },
       { status: 400 },
     );
   }
