@@ -50,6 +50,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Only INR payments are supported." }, { status: 400 });
   }
 
+  // Made to order: 50% now, the rest before shipping.
+  const total = Number(cart.cost.totalAmount.amount);
+  const deposit = Math.ceil(total / 2);
+
   // Short, easy to read out: no 0/O/1/I. 32^6 ≈ 1e9 ids, a PK clash just fails the insert.
   const orderId = `YI-${Array.from(
     crypto.getRandomValues(new Uint8Array(6)),
@@ -57,7 +61,7 @@ export async function POST(request: Request) {
   ).join("")}`;
   let rzpOrderId: string;
   try {
-    rzpOrderId = (await createRazorpayOrder(Number(cart.cost.totalAmount.amount), orderId)).id;
+    rzpOrderId = (await createRazorpayOrder(deposit, orderId)).id;
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "Could not start payment." }, { status: 502 });
@@ -69,7 +73,8 @@ export async function POST(request: Request) {
     payment_status: "pending",
     payment_reference: rzpOrderId,
     currency_code: cart.cost.totalAmount.currencyCode,
-    total_amount: Number(cart.cost.totalAmount.amount),
+    total_amount: total,
+    balance_amount: total - deposit,
     customer_email: email || null,
     guest_email: email || null,
     cart_snapshot: cart,
@@ -122,7 +127,7 @@ export async function POST(request: Request) {
     
     const redirectUrl = new URL(`/checkout/pay`, baseUrl);
     redirectUrl.searchParams.set("rzp", rzpOrderId);
-    redirectUrl.searchParams.set("amount", String(cart.cost.totalAmount.amount));
+    redirectUrl.searchParams.set("amount", String(deposit));
 
     const output = NextResponse.redirect(redirectUrl, 303);
     // set cookies for address so subsequent flows can reuse

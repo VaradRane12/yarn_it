@@ -1174,6 +1174,15 @@ function OrdersTab({
     );
   });
 
+  async function balanceLink(id: string) {
+    const res = await api("order", "POST", { id });
+    const url = res.data?.url;
+    if (!res.ok || !url) return notify("Could not create balance link", "error");
+    await navigator.clipboard.writeText(url).catch(() => prompt("Send this link:", url));
+    notify("Balance link copied");
+    await reload();
+  }
+
   async function update(id: string, status: string, payment_status: string) {
     const res = await api("order", "PATCH", { id, status, payment_status });
     if (res.ok) {
@@ -1296,6 +1305,15 @@ function OrdersTab({
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2 border-t border-neutral-100 pt-3">
+                  {["deposit_paid", "balance_pending"].includes(o.payment_status) ? (
+                    <button
+                      className={btnGhost}
+                      type="button"
+                      onClick={() => balanceLink(o.id)}
+                    >
+                      Balance link (₹{o.balance_amount})
+                    </button>
+                  ) : null}
                   {o.status !== "paid" ? (
                     <button
                       className={`${btn} bg-emerald-600 text-white hover:bg-emerald-700`}

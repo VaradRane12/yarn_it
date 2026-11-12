@@ -3,6 +3,7 @@ import {
   MISSING_ORDERS_TABLE_HINT,
   MISSING_ORDERS_TABLE_MESSAGE,
 } from "lib/store/order-errors";
+import { createRazorpayOrder } from "lib/razorpay";
 import { NextResponse } from "next/server";
 
 const guard = (request: Request) => {
@@ -101,4 +102,30 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: text }, { status: res.status });
   }
   return NextResponse.json({ success: true, result: JSON.parse(text) });
+}
+
+// Creates a Razorpay order for the remaining balance; returns the pay link to send the customer.
+export async function POST(request: Request) {
+  if (!guard(request))
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { supabaseUrl, supabaseKey } = getSupabaseEnv();
+  if (!supabaseUrl || !supabaseKey)
+    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
+  const { id } = await request.json().catch(() => ({}));
+  const base = `${supabaseUrl.replace(/\/$/, "")}/rest/v1/orders?id=eq.${encodeURIComponent(id || "")}`;
+  const h = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` };
+  const [order] = await (await fetch(`${base}&select=payment_status,balance_amount`, { headers: h, cache: "no-store" })).json();
+  const due = Number(order?.balance_amount);
+  if (!order || !["deposit_paid", "balance_pending"].includes(order.payment_status) || !(due > 0))
+    return NextResponse.json({ error: "No balance due" }, { status: 400 });
+  const rzp = await createRazorpayOrder(due, id).catch(() => null);
+  if (!rzp) return NextResponse.json({ error: "Could not start payment" }, { status: 502 });
+  const res = await fetch(base, {
+    method: "PATCH",
+    headers: { ...h, "Content-Type": "application/json" },
+    body: JSON.stringify({ payment_status: "balance_pending", payment_reference: rzp.id, updated_at: new Date().toISOString() }),
+  });
+  if (!res.ok) return NextResponse.json({ error: await res.text() }, { status: 500 });
+  const origin = new URL(request.url).origin;
+  return NextResponse.json({ url: `${origin}/checkout/pay?rzp=${rzp.id}&amount=${due}` });
 }
