@@ -1,4 +1,3 @@
-import { baseUrl } from "lib/utils";
 import { NextResponse } from "next/server";
 
 const GRAPH = "https://graph.facebook.com/v23.0";
@@ -25,54 +24,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const igId = process.env.INSTAGRAM_USER_ID;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (
-    !igId ||
-    !process.env.INSTAGRAM_ACCESS_TOKEN ||
-    !supabaseUrl ||
-    !supabaseKey
-  )
+  if (!igId || !process.env.INSTAGRAM_ACCESS_TOKEN)
     return NextResponse.json(
       { error: "Instagram not configured" },
       { status: 500 },
     );
 
   const body = await request.json();
-  let imageUrl: string = body.imageUrl || "";
-  let caption: string = body.caption || "";
+  const caption: string = body.caption || "";
+  const imageUrls: string[] = Array.isArray(body.imageUrls)
+    ? body.imageUrls
+    : [body.imageUrl].filter(Boolean);
 
-  if (body.id) {
-    const res = await fetch(
-      `${supabaseUrl.replace(/\/$/, "")}/rest/v1/products?id=eq.${encodeURIComponent(body.id)}&select=title,handle,description,featured_image,price_range`,
-      {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-      },
-    );
-    const product = (await res.json())?.[0];
-    if (!product)
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
-    imageUrl ||= product.featured_image?.url || "";
-    if (!caption) {
-      const price = product.price_range?.maxVariantPrice?.amount;
-      caption = [
-        product.title,
-        product.description?.replace(/<[^>]+>/g, ""),
-        price ? `₹${Number(price).toFixed(0)}` : "",
-        `${baseUrl}/product/${product.handle}`,
-      ]
-        .filter(Boolean)
-        .join("\n\n");
-    }
-  }
-
-  // Instagram fetches the image itself, so it must be absolute and public.
-  if (!imageUrl.startsWith("http"))
+  // Instagram fetches each image itself, so they must be absolute and public.
+  if (!imageUrls.length || !imageUrls.every((u) => /^https?:\/\//.test(u)))
     return NextResponse.json(
-      { error: "Image is not a public URL" },
+      { error: "Images must be public URLs" },
+      { status: 400 },
+    );
+  if (imageUrls.length > 10)
+    return NextResponse.json(
+      { error: "Instagram allows at most 10 photos per post" },
       { status: 400 },
     );
   if (caption.length > 2200)
@@ -82,17 +54,37 @@ export async function POST(request: Request) {
     );
 
   try {
-    const container = await graph(`${igId}/media`, {
-      image_url: imageUrl,
-      caption,
-    });
-    // The container can take a moment to process; retry the publish once.
-    const publish = () =>
-      graph(`${igId}/media_publish`, { creation_id: container.id });
-    const post = await publish().catch(async () => {
-      await new Promise((r) => setTimeout(r, 3000));
-      return publish();
-    });
+    let creationId: string;
+    if (imageUrls.length === 1) {
+      creationId = (
+        await graph(`${igId}/media`, { image_url: imageUrls[0]!, caption })
+      ).id;
+    } else {
+      const children = await Promise.all(
+        imageUrls.map((url) =>
+          graph(`${igId}/media`, { image_url: url, is_carousel_item: "true" }),
+        ),
+      );
+      creationId = (
+        await graph(`${igId}/media`, {
+          media_type: "CAROUSEL",
+          children: children.map((c) => c.id).join(","),
+          caption,
+        })
+      ).id;
+    }
+    // Containers can take a moment to process; retry the publish a few times.
+    let post: { id: string } | undefined;
+    for (let attempt = 0; !post; attempt++) {
+      try {
+        post = await graph(`${igId}/media_publish`, {
+          creation_id: creationId,
+        });
+      } catch (e) {
+        if (attempt >= 3) throw e;
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+    }
     return NextResponse.json({ ok: true, id: post.id });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 502 });

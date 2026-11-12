@@ -28,6 +28,7 @@ const TABS = [
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
+const MAX_IG_PHOTOS = 10;
 const PASSWORD_KEY = "yi-admin-password";
 
 // ---------- small UI pieces ----------
@@ -168,13 +169,18 @@ function instagramRatio(ratio: number) {
   return Math.min(Math.max(ratio, 0.8), 1.91);
 }
 
-async function toInstagramJpeg(url: string, adminPassword: string) {
+// `forcedRatio` keeps every carousel photo the same shape as the first one.
+async function toInstagramJpeg(
+  url: string,
+  adminPassword: string,
+  forcedRatio?: number,
+) {
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.src = url;
   await img.decode();
   const ratio = img.naturalWidth / img.naturalHeight;
-  const target = instagramRatio(ratio);
+  const target = forcedRatio ?? instagramRatio(ratio);
   // centre-crop to the allowed ratio
   const sw = ratio > target ? img.naturalHeight * target : img.naturalWidth;
   const sh = ratio < target ? img.naturalWidth / target : img.naturalHeight;
@@ -203,7 +209,10 @@ async function toInstagramJpeg(url: string, adminPassword: string) {
   const file = new File([blob], `instagram-${Date.now()}.jpg`, {
     type: "image/jpeg",
   });
-  return (await uploadAdminImage(file, adminPassword)).url;
+  return {
+    url: (await uploadAdminImage(file, adminPassword)).url,
+    ratio: target,
+  };
 }
 
 // Existing handles stay untouched so live URLs don't break; new or edited ones get slugified.
@@ -1343,22 +1352,46 @@ function InstagramTab({
   products: any[];
 }) {
   const [productId, setProductId] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState("");
+  const [uploads, setUploads] = useState<string[]>([]);
+  const [chosen, setChosen] = useState<string[]>([]);
   const [caption, setCaption] = useState("");
   const [query, setQuery] = useState("");
   const [uploading, setUploading] = useState(false);
   const [posting, setPosting] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [previewRatio, setPreviewRatio] = useState(1);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(
     null,
   );
 
   const selected = products.find((p) => p.id === productId);
+  const pool = [
+    ...(selected ? productImages(selected).map((i) => i.url) : []),
+    ...uploads,
+  ].filter((url, i, all) => all.indexOf(url) === i);
+  const previewUrl = chosen[Math.min(previewIndex, chosen.length - 1)] || "";
 
   function pick(p: any) {
     setProductId(p.id);
-    setImageUrl(productImages(p)[0]?.url || "");
+    setChosen(
+      productImages(p)
+        .map((i) => i.url)
+        .slice(0, MAX_IG_PHOTOS),
+    );
+    setPreviewIndex(0);
     setCaption(defaultCaption(p));
     setResult(null);
+  }
+
+  function toggle(url: string) {
+    setChosen((cur) => {
+      if (cur.includes(url)) return cur.filter((u) => u !== url);
+      if (cur.length >= MAX_IG_PHOTOS) {
+        notify(`Instagram allows up to ${MAX_IG_PHOTOS} photos`, "error");
+        return cur;
+      }
+      return [...cur, url];
+    });
   }
 
   useEffect(() => {
@@ -1367,22 +1400,28 @@ function InstagramTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialProductId]);
 
-  const [previewRatio, setPreviewRatio] = useState(1);
   const filtered = products.filter((p) =>
     `${p.title} ${p.handle}`.toLowerCase().includes(query.trim().toLowerCase()),
   );
 
   async function post() {
-    if (!imageUrl || !confirm("Publish this post to Instagram now?")) return;
+    const n = chosen.length;
+    if (!n || !confirm(`Publish this ${n}-photo post to Instagram now?`))
+      return;
     setPosting(true);
     setResult(null);
-    let url = imageUrl;
-    try {
-      url = await toInstagramJpeg(imageUrl, adminPassword);
-    } catch {
-      // conversion failed (e.g. CORS); try the original photo
+    const imageUrls: string[] = [];
+    let ratio: number | undefined;
+    for (const url of chosen) {
+      try {
+        const out = await toInstagramJpeg(url, adminPassword, ratio);
+        ratio ??= out.ratio;
+        imageUrls.push(out.url);
+      } catch {
+        imageUrls.push(url); // conversion failed (e.g. CORS); try the original
+      }
     }
-    const res = await api("instagram", "POST", { imageUrl: url, caption });
+    const res = await api("instagram", "POST", { imageUrls, caption });
     setPosting(false);
     if (res.ok) {
       setResult({ ok: true, message: "Posted to Instagram." });
@@ -1400,7 +1439,7 @@ function InstagramTab({
         <div className={`${card} p-5`}>
           <h2 className="mb-1 text-sm font-semibold">1. Pick a product</h2>
           <p className="mb-3 text-xs text-neutral-500">
-            Fills in the photo and a caption you can edit.
+            Fills in its photos and a caption you can edit.
           </p>
           <input
             className={`${inputCls} mb-3`}
@@ -1439,62 +1478,73 @@ function InstagramTab({
               );
             })}
           </div>
-          {selected && productImages(selected).length > 1 ? (
-            <div className="mt-3">
-              <p className="mb-2 text-xs font-medium text-neutral-600">
-                Choose which photo to post
-              </p>
-              <div className="flex gap-2 overflow-x-auto">
-                {productImages(selected).map((img) => (
+        </div>
+
+        <div className={`${card} p-5`}>
+          <h2 className="mb-1 text-sm font-semibold">2. Choose photos</h2>
+          <p className="mb-3 text-xs text-neutral-500">
+            Tap to add or remove. Numbers show the order (up to {MAX_IG_PHOTOS}
+            ). Several photos make a swipeable post.
+          </p>
+          {pool.length ? (
+            <div className="mb-4 grid grid-cols-4 gap-2 sm:grid-cols-6">
+              {pool.map((url) => {
+                const order = chosen.indexOf(url);
+                return (
                   <button
-                    key={img.url}
+                    key={url}
                     type="button"
-                    onClick={() => setImageUrl(img.url)}
-                    className={`h-16 w-16 shrink-0 overflow-hidden rounded border-2 ${
-                      imageUrl === img.url
+                    onClick={() => toggle(url)}
+                    aria-pressed={order >= 0}
+                    className={`relative overflow-hidden rounded-lg border-2 ${
+                      order >= 0
                         ? "border-rose-500"
-                        : "border-transparent"
+                        : "border-transparent opacity-60"
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={img.url}
-                      alt={img.altText}
-                      className="h-full w-full object-cover"
+                      src={url}
+                      alt={`Photo ${order + 1}`}
+                      className="aspect-square w-full object-cover"
                     />
+                    {order >= 0 ? (
+                      <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-semibold text-white">
+                        {order + 1}
+                      </span>
+                    ) : null}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
           ) : null}
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-medium text-neutral-600">
-              …or upload a different photo
-            </p>
-            <PhotoDropzone
-              disabled={uploading}
-              multiple={false}
-              label="Drop a photo to post"
-              onFiles={async (files) => {
-                setUploading(true);
-                try {
-                  const img = await uploadAdminImage(files[0]!, adminPassword);
-                  setImageUrl(img.url);
-                } catch (e) {
-                  notify(
-                    e instanceof Error ? e.message : "Upload failed",
-                    "error",
-                  );
-                } finally {
-                  setUploading(false);
-                }
-              }}
-            />
-          </div>
+          <PhotoDropzone
+            disabled={uploading}
+            label="Drop more photos to post"
+            onFiles={async (files) => {
+              setUploading(true);
+              try {
+                const urls = (
+                  await Promise.all(
+                    files.map((f) => uploadAdminImage(f, adminPassword)),
+                  )
+                ).map((i) => i.url);
+                setUploads((cur) => [...cur, ...urls]);
+                setChosen((cur) => [...cur, ...urls].slice(0, MAX_IG_PHOTOS));
+              } catch (e) {
+                notify(
+                  e instanceof Error ? e.message : "Upload failed",
+                  "error",
+                );
+              } finally {
+                setUploading(false);
+              }
+            }}
+          />
         </div>
 
         <div className={`${card} p-5`}>
-          <h2 className="mb-3 text-sm font-semibold">2. Write the caption</h2>
+          <h2 className="mb-3 text-sm font-semibold">3. Write the caption</h2>
           <textarea
             className={inputCls}
             rows={8}
@@ -1510,36 +1560,66 @@ function InstagramTab({
       </div>
 
       <div className="lg:sticky lg:top-28 lg:self-start">
-        <h2 className="mb-2 text-sm font-semibold">3. Preview &amp; post</h2>
+        <h2 className="mb-2 text-sm font-semibold">4. Preview &amp; post</h2>
         <div className={`${card} overflow-hidden`}>
           <div className="flex items-center gap-2 px-3 py-2">
             <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-amber-400 via-rose-500 to-fuchsia-600" />
             <span className="text-sm font-semibold">yarn_it.co</span>
           </div>
           <div
-            className="flex items-center justify-center bg-neutral-100"
-            style={{ aspectRatio: imageUrl ? previewRatio : 1 }}
+            className="relative flex items-center justify-center bg-neutral-100"
+            style={{ aspectRatio: previewUrl ? previewRatio : 1 }}
           >
-            {imageUrl ? (
+            {previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={imageUrl}
+                src={previewUrl}
                 alt="Post preview"
                 className="h-full w-full object-cover"
-                onLoad={(e) =>
-                  setPreviewRatio(
-                    instagramRatio(
-                      e.currentTarget.naturalWidth /
-                        e.currentTarget.naturalHeight,
-                    ),
-                  )
-                }
+                onLoad={(e) => {
+                  // every photo is cropped to the first photo's shape
+                  if (previewUrl === chosen[0])
+                    setPreviewRatio(
+                      instagramRatio(
+                        e.currentTarget.naturalWidth /
+                          e.currentTarget.naturalHeight,
+                      ),
+                    );
+                }}
               />
             ) : (
               <span className="text-sm text-neutral-400">
-                Pick a product or upload a photo
+                Pick a product or upload photos
               </span>
             )}
+            {chosen.length > 1 ? (
+              <>
+                <span className="absolute right-2 top-2 rounded-full bg-neutral-900/70 px-2 py-0.5 text-xs text-white">
+                  {Math.min(previewIndex, chosen.length - 1) + 1}/
+                  {chosen.length}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Previous photo"
+                  className="absolute left-2 rounded-full bg-white/90 px-2 py-1 text-sm shadow disabled:opacity-30"
+                  disabled={previewIndex <= 0}
+                  onClick={() => setPreviewIndex((i) => Math.max(0, i - 1))}
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next photo"
+                  className="absolute right-2 rounded-full bg-white/90 px-2 py-1 text-sm shadow disabled:opacity-30"
+                  disabled={previewIndex >= chosen.length - 1}
+                  onClick={() =>
+                    setPreviewIndex((i) => Math.min(chosen.length - 1, i + 1))
+                  }
+                >
+                  ›
+                </button>
+              </>
+            ) : null}
           </div>
           <p className="max-h-40 overflow-y-auto whitespace-pre-wrap px-3 py-3 text-sm">
             <span className="font-semibold">yarn_it.co </span>
@@ -1547,8 +1627,8 @@ function InstagramTab({
           </p>
         </div>
         <p className="mt-2 text-xs text-neutral-500">
-          Photos are converted to JPEG and cropped to Instagram&apos;s allowed
-          shape (4:5 to 1.91:1) when you post.
+          Photos are converted to JPEG and cropped to the first photo&apos;s
+          shape (Instagram allows 4:5 to 1.91:1) when you post.
         </p>
         {result ? (
           <p
@@ -1564,10 +1644,14 @@ function InstagramTab({
         <button
           className={`${btn} mt-3 w-full bg-gradient-to-r from-rose-500 to-fuchsia-600 py-3 text-white hover:opacity-90`}
           type="button"
-          disabled={!imageUrl || posting || uploading}
+          disabled={!chosen.length || posting || uploading}
           onClick={post}
         >
-          {posting ? "Posting…" : "Post to Instagram"}
+          {posting
+            ? "Posting…"
+            : chosen.length > 1
+              ? `Post ${chosen.length} photos to Instagram`
+              : "Post to Instagram"}
         </button>
       </div>
     </div>
